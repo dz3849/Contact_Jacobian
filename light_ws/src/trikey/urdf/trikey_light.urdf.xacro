@@ -1,0 +1,164 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="trikey_light">
+
+   <!-- Central Body -->
+    <link name="center_link">
+        <!-- <inertial>
+            <origin xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
+            <mass value="3.0"/>
+            <inertia ixx="2.0" ixy="0.0" ixz="0.0" iyy="2.0" iyz="0.0" izz="2.0"/>
+        </inertial> -->
+        <visual>
+            <origin xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
+            <geometry>
+                <cylinder radius="0.6" length="0.5"/>
+            </geometry>
+            <material name="gray">
+                <color rgba="0.5 0.5 0.5 1.0"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
+            <geometry>
+                <cylinder radius="0.6" length="0.5"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Three Shaft and Wheel Assemblies -->
+    <xacro:macro name="shaft_wheel" params="id x y rpy">
+        <link name="shaft_link_${id}">
+            <inertial>
+                <origin xyz="0.0 1.2 1.0" rpy="1.5708 0.0 0.0"/>
+                <mass value="1.0"/>
+                <inertia ixx="1.333" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="1.333"/>
+            </inertial>
+            <visual>
+                <origin xyz="0.0 1.2 1.0" rpy="1.5708 0.0 0.0"/>
+                <geometry>
+                    <cylinder radius="0.5" length="2"/>
+                </geometry>
+                <material name="red">
+                    <color rgba="1.0 0.0 0.0 1.0"/>
+                </material>
+            </visual>
+            <collision>
+                <origin xyz="0.0 1.2 1.0" rpy="1.5708 0.0 0.0"/>
+                <geometry>
+                    <cylinder radius="0.5" length="2"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <joint name="base_joint_${id}" type="fixed">
+            <origin xyz="${x} ${y} 0.0" rpy="0.0 0.0 ${rpy}"/>
+            <parent link="center_link"/>
+            <child link="shaft_link_${id}"/>
+        </joint>
+
+        <link name="wheel_link_${id}"> 
+            <inertial>
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                <mass value="0.5"/>
+                <inertia ixx="0.5" ixy="0.0" ixz="0.0" iyy="0.25" iyz="0.0" izz="0.5"/>
+            </inertial>
+            <visual>
+                <origin xyz="0.0 0.0 -0.2" rpy="0.0 0.0 0.0"/>
+                <geometry>
+                    <cylinder radius="1.0" length="0.3"/>
+                </geometry>
+                <material name="black">
+                    <color rgba="0.0 0.0 0.0 1.0"/>
+                </material>
+            </visual>
+            <surface>
+                <friction>
+                <ode>
+                    <mu>100</mu>
+                    <mu2>100</mu2>
+                </ode>
+                </friction>
+                <contact>
+                <ode>
+                    <min_depth>0.003</min_depth>
+                </ode>
+        </contact>
+            </surface>
+            <collision>
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                <geometry>
+                    <cylinder radius="1.0" length="0.3"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <joint name="wheel_joint_${id}" type="continuous">
+            <origin xyz="0.0 2.0 1.0" rpy="1.57 0.0 0.0"/>
+            <parent link="shaft_link_${id}"/>
+            <child link="wheel_link_${id}"/>
+            <axis xyz="0.0 0.0 1.0"/>
+            <limit effort="10.0" velocity="5.0"/>
+        </joint>
+
+        <transmission name="wheel_joint_transmission_${id}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="wheel_joint_${id}">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="wheel_motor_${id}">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+    </xacro:macro>
+
+
+ 
+    <!-- Instantiate three shaft-wheel assemblies at 120-degree intervals -->
+    <!-- <xacro:shaft_wheel id="1" x="1.2" y="0.0" rpy="0.0"/>
+    <xacro:shaft_wheel id="2" x="-0.6" y="1.039" rpy="2.094"/>
+    <xacro:shaft_wheel id="3" x="-0.6" y="-1.039" rpy="-2.094"/> -->
+
+<!-- 
+    <xacro:shaft_wheel id="1" x="1" y="0.0" rpy="1.5708"/>
+    <xacro:shaft_wheel id="2" x="-0.5" y="0.8660254038" rpy="3.66519"/>
+    <xacro:shaft_wheel id="3" x="-0.5" y="-0.8660254038" rpy="5.75959"/> -->
+
+
+    <xacro:property name="r" value="-1"/>
+
+  <!-- Angles in radians -->
+  <!-- 0°, 120°, and -120° in radians -->
+  <xacro:property name="theta1" value="0.0"/>
+  <xacro:property name="theta2" value="2.0943951"/>    <!-- 120 deg -->
+  <xacro:property name="theta3" value="-2.0943951"/>   <!-- -120 deg -->
+
+  <!-- If you need to add 90° (pi/2 = 1.5708) to each rotation: -->
+  <xacro:property name="rotate90" value="1.5708"/>
+      <!-- Instantiate three shafts/wheels at 0°, +120°, -120° -->
+  <!-- We add +90° (rotate90) to each RPY if needed. -->
+  <xacro:shaft_wheel
+      id="1"
+      x="${r * cos(theta1)}"
+      y="${r * sin(theta1)}"
+      rpy="${theta1 + rotate90}"
+  />
+  <xacro:shaft_wheel
+      id="2"
+      x="${r * cos(theta2)}"
+      y="${r * sin(theta2)}"
+      rpy="${theta2 + rotate90}"
+  />
+  <xacro:shaft_wheel
+      id="3"
+      x="${r * cos(theta3)}"
+      y="${r * sin(theta3)}"
+      rpy="${theta3 + rotate90}"
+  />
+
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotNamespace>/trikey_light</robotNamespace>
+        </plugin>
+    </gazebo>
+</robot>

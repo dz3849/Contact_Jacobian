@@ -1,0 +1,19 @@
+trikey_light:
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
+
+  wheel_joint_effort_controller_1:
+    type: effort_controllers/JointEffortController
+    joint: wheel_joint_1
+    command_topic: /wheel_joint_effort_controller/command
+
+  wheel_joint_effort_controller_2:
+    type: effort_controllers/JointEffortController
+    joint: wheel_joint_2
+    command_topic: /wheel_joint_effort_controller/command
+    
+  wheel_joint_effort_controller_3:
+    type: effort_controllers/JointEffortController
+    joint: wheel_joint_3
+    command_topic: /wheel_joint_effort_controller/command

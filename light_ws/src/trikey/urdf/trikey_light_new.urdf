@@ -1,0 +1,263 @@
+<?xml version="1.0"?>
+<robot name="trikey_light">
+
+  <!-- Main body link (was "base_link" in the original) -->
+  <link name="center_link">
+    <!-- Example inertial (optional, currently commented out)
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="3.0"/>
+      <inertia ixx="2.0" ixy="0.0" ixz="0.0" iyy="2.0" iyz="0.0" izz="2.0"/>
+    </inertial>
+    -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.6" length="1.0"/>
+      </geometry>
+      <material name="gray">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.6" length="1.0"/>
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!-- ====================
+       Shaft-Wheel #1
+       ==================== -->
+  <link name="shaft_link_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="1.333" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="1.333"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.0 1.2 1.0" rpy="1.57 0.0 0.0"/>
+      <geometry>
+        <cylinder radius="0.5" length="2"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.5" length="2"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="base_joint_1" type="fixed">
+    <origin xyz="1.2 0.0 0.0" rpy="0 0 0"/>
+    <parent link="center_link"/>
+    <child link="shaft_link_1"/>
+  </joint>
+
+  <link name="wheel_link_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.5" ixy="0.0" ixz="0.0" iyy="0.25" iyz="0.0" izz="0.5"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.2" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="1.0" length="0.3"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="1.0" length="0.3"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="wheel_joint_1" type="continuous">
+    <origin xyz="0.0 2.0 1.0" rpy="1.57 0.0 0.0"/>
+    <parent link="shaft_link_1"/>
+    <child link="wheel_link_1"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <limit effort="10.0" velocity="5.0"/>
+  </joint>
+
+  <transmission name="wheel_joint_transmission_1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="wheel_joint_1">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="wheel_motor_1">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+
+  <!-- ====================
+       Shaft-Wheel #2
+       ==================== -->
+  <link name="shaft_link_2">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="1.333" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="1.333"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.0 1.2 1.0" rpy="1.57 0.0 0.0"/>
+      <geometry>
+        <cylinder radius="0.5" length="2"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.5" length="2"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="base_joint_2" type="fixed">
+    <origin xyz="-0.6 1.039 0.0" rpy="0.0 0.0 2.094"/>
+    <parent link="center_link"/>
+    <child link="shaft_link_2"/>
+  </joint>
+
+  <link name="wheel_link_2">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.5" ixy="0.0" ixz="0.0" iyy="0.25" iyz="0.0" izz="0.5"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.2" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="1.0" length="0.3"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="1.0" length="0.3"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="wheel_joint_2" type="continuous">
+    <origin xyz="0.0 2.0 1.0" rpy="1.57 0.0 0.0"/>
+    <parent link="shaft_link_2"/>
+    <child link="wheel_link_2"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <limit effort="10.0" velocity="5.0"/>
+  </joint>
+
+  <transmission name="wheel_joint_transmission_2">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="wheel_joint_2">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="wheel_motor_2">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+
+  <!-- ====================
+       Shaft-Wheel #3
+       ==================== -->
+  <link name="shaft_link_3">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="1.333" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="1.333"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.0 1.2 1.0" rpy="1.57 0.0 0.0"/>
+      <geometry>
+        <cylinder radius="0.5" length="2"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.5" length="2"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="base_joint_3" type="fixed">
+    <origin xyz="-0.6 -1.039 0.0" rpy="0.0 0.0 -2.094"/>
+    <parent link="center_link"/>
+    <child link="shaft_link_3"/>
+  </joint>
+
+  <link name="wheel_link_3">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.5" ixy="0.0" ixz="0.0" iyy="0.25" iyz="0.0" izz="0.5"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.2" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="1.0" length="0.3"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="1.0" length="0.3"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="wheel_joint_3" type="continuous">
+    <origin xyz="0.0 2.0 1.0" rpy="1.57 0.0 0.0"/>
+    <parent link="shaft_link_3"/>
+    <child link="wheel_link_3"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <limit effort="10.0" velocity="5.0"/>
+  </joint>
+
+  <transmission name="wheel_joint_transmission_3">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="wheel_joint_3">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="wheel_motor_3">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+
+  <!-- Gazebo ROS Control Plugin -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/trikey_light</robotNamespace>
+    </plugin>
+  </gazebo>
+
+</robot>
