@@ -36,7 +36,7 @@ class ContactJacobian():
         self.velocity = None
         rospy.Subscriber("/gazebo/model_states", Twist, callback = self.vel_callback) # this is a vector
         self.base_angular_acceleration = None
-        rospy.Subscriber("/trikey_light/wheel_joint_effort_controller_1/command", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
+        rospy.Subscriber("/trikey_light/joint_state", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
         self.t  = rospy.get_rostime()
         #rospy.Subscriber("/clock", Time, self.time_callback)
         self.Ts = None
@@ -204,7 +204,8 @@ class ContactJacobian():
                 y = edge_start[1] + s*(edge_end[1] - edge_start[0])
                 edge_flag[edge_count] = True
                 intersections.append((x, y))
-        
+                
+        #The stuff for first contact point    
         if Fext[0] != 0:
             if edge_flag[0] == True and edge_flag[1] == True:
                 if Fext[1] > 0:

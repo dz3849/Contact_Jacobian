@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/dylan/light_ws/src
+CMAKE_SOURCE_DIR = /home/dylan/Contact_Jacobian/light_ws/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/dylan/light_ws/build
+CMAKE_BINARY_DIR = /home/dylan/Contact_Jacobian/light_ws/build
 
 # Utility rule file for std_msgs_generate_messages_lisp.
 
@@ -63,10 +63,10 @@ trikey/CMakeFiles/std_msgs_generate_messages_lisp.dir/build: std_msgs_generate_m
 .PHONY : trikey/CMakeFiles/std_msgs_generate_messages_lisp.dir/build
 
 trikey/CMakeFiles/std_msgs_generate_messages_lisp.dir/clean:
-	cd /home/dylan/light_ws/build/trikey && $(CMAKE_COMMAND) -P CMakeFiles/std_msgs_generate_messages_lisp.dir/cmake_clean.cmake
+	cd /home/dylan/Contact_Jacobian/light_ws/build/trikey && $(CMAKE_COMMAND) -P CMakeFiles/std_msgs_generate_messages_lisp.dir/cmake_clean.cmake
 .PHONY : trikey/CMakeFiles/std_msgs_generate_messages_lisp.dir/clean
 
 trikey/CMakeFiles/std_msgs_generate_messages_lisp.dir/depend:
-	cd /home/dylan/light_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dylan/light_ws/src /home/dylan/light_ws/src/trikey /home/dylan/light_ws/build /home/dylan/light_ws/build/trikey /home/dylan/light_ws/build/trikey/CMakeFiles/std_msgs_generate_messages_lisp.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/dylan/Contact_Jacobian/light_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dylan/Contact_Jacobian/light_ws/src /home/dylan/Contact_Jacobian/light_ws/src/trikey /home/dylan/Contact_Jacobian/light_ws/build /home/dylan/Contact_Jacobian/light_ws/build/trikey /home/dylan/Contact_Jacobian/light_ws/build/trikey/CMakeFiles/std_msgs_generate_messages_lisp.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : trikey/CMakeFiles/std_msgs_generate_messages_lisp.dir/depend
 

@@ -1,8 +1,8 @@
-# Install script for directory: /home/dylan/light_ws/src/trikey
+# Install script for directory: /home/dylan/Contact_Jacobian/light_ws/src/trikey
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/dylan/light_ws/install")
+  set(CMAKE_INSTALL_PREFIX "/home/dylan/Contact_Jacobian/light_ws/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -38,25 +38,25 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/dylan/light_ws/build/trikey/catkin_generated/installspace/trikey.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/dylan/Contact_Jacobian/light_ws/build/trikey/catkin_generated/installspace/trikey.pc")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/trikey/cmake" TYPE FILE FILES
-    "/home/dylan/light_ws/build/trikey/catkin_generated/installspace/trikeyConfig.cmake"
-    "/home/dylan/light_ws/build/trikey/catkin_generated/installspace/trikeyConfig-version.cmake"
+    "/home/dylan/Contact_Jacobian/light_ws/build/trikey/catkin_generated/installspace/trikeyConfig.cmake"
+    "/home/dylan/Contact_Jacobian/light_ws/build/trikey/catkin_generated/installspace/trikeyConfig-version.cmake"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/trikey" TYPE FILE FILES "/home/dylan/light_ws/src/trikey/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/trikey" TYPE FILE FILES "/home/dylan/Contact_Jacobian/light_ws/src/trikey/package.xml")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/trikey/config" TYPE FILE FILES "/home/dylan/light_ws/src/trikey/config/controller.yaml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/trikey/config" TYPE FILE FILES "/home/dylan/Contact_Jacobian/light_ws/src/trikey/config/controller.yaml")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/trikey/launch" TYPE DIRECTORY FILES "/home/dylan/light_ws/src/trikey/launch/")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/trikey/launch" TYPE DIRECTORY FILES "/home/dylan/Contact_Jacobian/light_ws/src/trikey/launch/")
 endif()
 

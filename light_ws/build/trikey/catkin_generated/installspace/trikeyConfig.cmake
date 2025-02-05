@@ -67,14 +67,14 @@ set(trikey_CONFIG_INCLUDED TRUE)
 
 # set variables for source/devel/install prefixes
 if("FALSE" STREQUAL "TRUE")
-  set(trikey_SOURCE_PREFIX /home/dylan/light_ws/src/trikey)
-  set(trikey_DEVEL_PREFIX /home/dylan/light_ws/devel)
+  set(trikey_SOURCE_PREFIX /home/dylan/Contact_Jacobian/light_ws/src/trikey)
+  set(trikey_DEVEL_PREFIX /home/dylan/Contact_Jacobian/light_ws/devel)
   set(trikey_INSTALL_PREFIX "")
   set(trikey_PREFIX ${trikey_DEVEL_PREFIX})
 else()
   set(trikey_SOURCE_PREFIX "")
   set(trikey_DEVEL_PREFIX "")
-  set(trikey_INSTALL_PREFIX /home/dylan/light_ws/install)
+  set(trikey_INSTALL_PREFIX /home/dylan/Contact_Jacobian/light_ws/install)
   set(trikey_PREFIX ${trikey_INSTALL_PREFIX})
 endif()
 
@@ -154,7 +154,7 @@ foreach(library ${libraries})
     set(lib_path "")
     set(lib "${library}-NOTFOUND")
     # since the path where the library is found is returned we have to iterate over the paths manually
-    foreach(path /home/dylan/light_ws/install/lib;/home/dylan/light_ws/devel/lib;/opt/ros/noetic/lib)
+    foreach(path /home/dylan/Contact_Jacobian/light_ws/install/lib;/home/dylan/Contact_Jacobian/light_ws/devel/lib;/opt/ros/noetic/lib)
       find_library(lib ${library}
         PATHS ${path}
         NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)

@@ -113,6 +113,8 @@ catkin_package(
   LIBRARIES trikey
   CATKIN_DEPENDS roscpp rospy std_msgs gazebo_ros
   DEPENDS gazebo
+  # gazebo_INCLUDE_DIRS
+  # gazebo_INCLUDE_DIRS_LIBRARIES
 )
 
 ###########

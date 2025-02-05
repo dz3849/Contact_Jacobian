@@ -7,4 +7,5 @@
 # new environment variables
 
 # modified environment variables
-export PWD='/home/dylan/light_ws/build'
+export PWD='/home/dylan/Contact_Jacobian/light_ws/build'
+export ROS_PACKAGE_PATH='/home/dylan/Contact_Jacobian/light_ws/src:/opt/ros/noetic/share'

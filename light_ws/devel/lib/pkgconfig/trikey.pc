@@ -1,4 +1,4 @@
-prefix=/home/dylan/light_ws/devel
+prefix=/home/dylan/Contact_Jacobian/light_ws/devel
 
 Name: trikey
 Description: Description of trikey
