@@ -75,13 +75,13 @@
       <surface>
         <friction>
           <ode>
-            <mu>100</mu>
-            <mu2>100</mu2>
+            <mu>100000</mu>
+            <mu2>100000</mu2>
           </ode>
         </friction>
         <contact>
           <ode>
-            <min_depth>0.003</min_depth>
+            <min_depth>0.005</min_depth>
           </ode>
         </contact>
       </surface>
@@ -114,6 +114,7 @@
           <update_rate>100</update_rate>
           <force_torque>
             <frame>child</frame>
+                        <measure_direction>child_to_parent</measure_direction>
           </force_torque>
         </sensor>
       </gazebo>
@@ -182,6 +183,8 @@
         <remapping>~/ft : ft_sensor_1</remapping>
       </ros>
       <update_rate>100</update_rate>
+            <frame>child</frame>
+            <measure_direction>child_to_parent</measure_direction>
       <bodyName>wheel_link_1</bodyName>
       <jointName>wheel_joint_1</jointName>
       <sensorName>ft_sensor_wheel_1</sensorName>
@@ -195,6 +198,8 @@
         <remapping>~/ft : ft_sensor_2</remapping>
       </ros>
       <update_rate>100</update_rate>
+      <frame>child</frame>
+                  <measure_direction>child_to_parent</measure_direction>
       <bodyName>wheel_link_2</bodyName>
       <jointName>wheel_joint_2</jointName>
       <sensorName>ft_sensor_wheel_2</sensorName>
@@ -208,6 +213,8 @@
         <remapping>~/ft : ft_sensor_3</remapping>
       </ros>
       <update_rate>100</update_rate>
+            <frame>child</frame>
+            <measure_direction>child_to_parent</measure_direction>
       <bodyName>wheel_link_3</bodyName>
       <jointName>wheel_joint_3</jointName>
       <sensorName>ft_sensor_wheel_3</sensorName>
