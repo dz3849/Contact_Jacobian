@@ -1,8 +1,0 @@
-prefix=/home/dylan/Contact_Jacobian/light_ws/install
-
-Name: trikey
-Description: Description of trikey
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib -ltrikey
-Requires: roscpp rospy std_msgs gazebo_ros
