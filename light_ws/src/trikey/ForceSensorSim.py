@@ -37,7 +37,7 @@ def main():
         js_msg.header.stamp = rospy.Time.now()
         
         # Name your joints (one name per wheel)
-        js_msg.name = ["wheel_link_1", "wheel_link_2", "wheel_link_3"]
+        js_msg.name = ["wheel_joint_1", "wheel_joint_2", "wheel_joint_3"]
         
         # Put torque values in the position array
         js_msg.position = [sensed_torques[0], 

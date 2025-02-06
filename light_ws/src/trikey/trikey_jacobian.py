@@ -36,7 +36,7 @@ class ContactJacobian():
         self.velocity = None
         rospy.Subscriber("/gazebo/model_states", Twist, callback = self.vel_callback) # this is a vector
         self.base_angular_acceleration = None
-        rospy.Subscriber("/trikey_light/joint_state", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
+        rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
         self.t  = rospy.get_rostime()
         #rospy.Subscriber("/clock", Time, self.time_callback)
         self.Ts = None
@@ -110,18 +110,13 @@ class ContactJacobian():
         except ValueError:
             rospy.logerr(f"Robot trikey_light not found in model_states")
 
-    def torquecallback(self, data):
-        joint_name = "wheel_joint_1"
-    
+    def torquecallback(self, data):   
         try:
-            index = data.name.index(joint_name)
-            
-            torque = data.effort[index]
-            self.Ts = [[torque], [torque], [torque]]
-            rospy.loginfo(f"Instantaneous torque for {joint_name}: {self.Ts} Nm")
+            self.Ts = data.position
+            # rospy.loginfo(f"Instantaneous torque for the wheels: {self.Ts} Nm")
             
         except ValueError:
-            rospy.logwarn(f"Joint {joint_name} not found in JointState message")
+            rospy.logwarn(f"Joints maybe not found in JointState message")
 
 
 
