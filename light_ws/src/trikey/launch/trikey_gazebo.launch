@@ -5,10 +5,9 @@
     <!-- <param name= "robot_description" textfile='$(find trikey)/urdf/trikey_light_new.urdf' /> -->
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" />
-    <node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher" output="screen" />
+    <!-- <node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher" output="screen" /> -->
 
-    <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <!--arg name="wolrd_name" value="$(find turtlebot3_gazebo)/worlds/empty.world"/> -->
+    <include file="$(find trikey)/world/trikey_world.launch">
         <arg name="paused" value="false"/>
         <arg name="use_sim_time" value="true"/>
         <arg name="gui" value="true"/>
