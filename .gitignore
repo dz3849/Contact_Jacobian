@@ -251,3 +251,4 @@ qtcreator-*
 CATKIN_IGNORE
 
 # End of https://www.toptal.com/developers/gitignore/api/ros,cmake,python
+.vscode/settings.json
