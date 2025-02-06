@@ -71,10 +71,7 @@ class ContactJacobian():
             self.velocity = [[robot_twist.linear.x], [robot_twist.linear.y], [robot_twist.angular.z]]
             self.wheel_angular_velocity = np.matmul(self.Jcw, self.velocity)
             self.roller_angular_velocity = np.matmul(self.Jcr, self.velocity)
-            
-            #rospy.loginfo(f"Velocity: Linear x- {self.velocity[0][0]} | Velocity: Linear y- {self.velocity[1][0]} | Angular - {self.velocity[2][0]}")
-            #rospy.loginfo(f"Wheel Angular Velocity: {self.wheel_angular_velocity}")
-            #rospy.loginfo(f"Roller Angular Velocity: {self.roller_angular_velocity}")
+
 
         except ValueError:
             rospy.logerr("Robot model 'trikey_light' not found in /gazebo/model_states")
@@ -93,7 +90,6 @@ class ContactJacobian():
             roll, pitch, yaw = euler_from_quaternion(q)
             
             self.theta= yaw
-            rospy.loginfo(f"theta isssss: {self.theta}")
             self.Jcw = 1/self.rw*np.array([[-np.sin(self.theta), np.cos(self.theta), self.R ], [-np.sin(self.theta + 2/3*np.pi),
                 np.cos(self.theta + 2/3*np.pi), self.R ], [-np.sin(self.theta + 4/3*np.pi), np.cos(self.theta + 4/3*np.pi), self.R]])
             self.Jcwdot = 1/self.rw*np.array([[-np.cos(self.theta), -np.sin(self.theta), 0.0], [-np.cos(self.theta+2/3*np.pi), 
@@ -113,7 +109,7 @@ class ContactJacobian():
     def torquecallback(self, data):   
         try:
             self.Ts = data.position
-            # rospy.loginfo(f"Instantaneous torque for the wheels: {self.Ts} Nm")
+            rospy.loginfo(f"Instantaneous torque for the wheels: {self.Ts} Nm")
             
         except ValueError:
             rospy.logwarn(f"Joints maybe not found in JointState message")
@@ -136,6 +132,8 @@ class ContactJacobian():
     def external_forces(self): 
         self.NominalTorque()
         self.T_ext_not = self.torque_no_fext()
+        rospy.loginfo(f"nominal toruqe:{self.T_ext_not}")
+        
         rospy.loginfo(f"Sensed Torque: {self.Ts}")
         RH_Matrix = np.matmul(np.linalg.inv(np.transpose(self.Jcw)), self.T_ext_not - self.Ts) # self.Ts
         rospy.loginfo(f"RH Matrix: {RH_Matrix}")
@@ -251,55 +249,6 @@ class ContactJacobian():
         y_n = self.y + np.sin(self.theta)*cp[0] + np.cos(self.theta)* cp[1]
         cp_global = [x_n, y_n]
         return cp_global
-    # This function will most likely be useless but just in case
-    def LineIntersection(self, robot_vertices, Fext):
-
-        top_left, bottom_tip, top_right = robot_vertices[0], robot_vertices[1], robot_vertices[2]
-
-        # entroid of the triangle
-        centroid = [self.x, self.y]
-
-        # Direction vector of the force (assumed to start from the centroid)
-        # force_direction= Fext
-        force_direction = [-100, 100]
-
-        # Edges of the triangle
-        edges = [(top_left, bottom_tip), (bottom_tip, top_right), (top_right, top_left)]
-
-        # Loop through each edge of the triangle
-        for edge_start, edge_end in edges:
-            # Parameterize the edge
-            edge_vector = np.array(edge_end) - np.array(edge_start)
-
-            # centroid + t * force_direction = edge_start + s * edge_vector
-            left_matrix = [
-                [-force_direction[0], edge_vector[0]], 
-                [force_direction[1], edge_vector[1]]
-                ]
-            right_matrix = [
-                [edge_start[0], edge_vector[0]], 
-                [edge_start[1], edge_vector[1]]
-                ]
-
-            
-            try:
-            # Solve the linear system for t and s
-                t, s = np.linalg.solve(left_matrix, right_matrix)
-                rospy.loginfo(f"t:{t}")
-                rospy.loginfo(f"s:{s}")
-
-            # Check if the solution is valid (t > 0 and 0 <= s <= 1)
-                if t[0] > 0 and s[0]>=0 and s[0]<=1:
-                    #Intersection point
-                    intersection = centroid + t*force_direction
-                    return intersection
-
-            except np.linalg.LinAlgError:
-                rospy.logwarn(f"womp womp")                
-                continue
-        
-        # If no intersection is found
-        return [0,0] #None supposedly
 
     # This shows where the vertices are in the global frame aka top view of the whole world
     # No need to use this atm
