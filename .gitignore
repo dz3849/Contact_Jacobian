@@ -4,7 +4,7 @@ devel/*
 light_ws/build/*
 light_ws/devel/*
 light_ws/.catkin*
-
+light_ws/.vscode/*
 
 # Created by https://www.toptal.com/developers/gitignore/api/ros,cmake,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=ros,cmake,python
