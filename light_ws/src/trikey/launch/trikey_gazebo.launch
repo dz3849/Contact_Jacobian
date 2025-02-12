@@ -6,8 +6,8 @@
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" />
     <remap from="/trikey_light/joint_states" to="/joint_states"/>
-    <node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher" output="screen" />
-    
+    <!-- <node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher" output="screen" /> -->
+
 
     <include file="$(find trikey)/world/trikey_world.launch">
         <arg name="paused" value="false"/>

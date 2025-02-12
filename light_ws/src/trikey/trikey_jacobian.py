@@ -7,6 +7,8 @@ from gazebo_msgs.msg import LinkStates
 from geometry_msgs.msg import Wrench
 from sensor_msgs.msg import JointState
 from tf.transformations import euler_from_quaternion
+from visualization_msgs.msg import Marker
+from geometry_msgs.msg import Point
 #Fix name space issue and i hopefully sdhould be good to go :(
 # and this error
 #[WARN] [1732923937.001813, 377.757000]: Controller Spawner couldn't find the expected controller_manager ROS interface.
@@ -39,6 +41,39 @@ class ContactJacobian():
         rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
         self.t  = rospy.get_rostime()
         #rospy.Subscriber("/clock", Time, self.time_callback)
+
+        self.timer = rospy.Timer(rospy.Duration(0.1), self.update_callback)
+
+        #create basic marker to visualize the external force
+        self.pub = rospy.Publisher("external_force", Marker, queue_size=10)
+        self.marker = Marker() 
+        self.marker.header.frame_id = "center_link"
+        self.marker.header.stamp = rospy.Time.now()
+        self.marker.ns = "external_force"
+        self.marker.id = 0
+        self.marker.type = Marker.ARROW
+        self.marker.action = Marker.ADD
+        self.marker.pose.position.x = 0
+        self.marker.pose.position.y = 0
+        self.marker.pose.position.z = 0
+        self.marker.pose.orientation.x = 0
+        self.marker.pose.orientation.y = 0
+        self.marker.pose.orientation.z = 0
+        self.marker.pose.orientation.w = 1
+        self.marker.scale.x = 0.1
+        self.marker.scale.y = 0.1
+        self.marker.scale.z = 0.1
+        self.marker.color.a = 1.0
+        self.marker.color.r = 1.0
+        self.marker.color.g = 0.0
+        self.marker.color.b = 0.0
+
+    
+
+
+
+
+
         self.Ts = None
         self.x = None
         self.y = None
@@ -53,7 +88,17 @@ class ContactJacobian():
         #chmod +x the file to make it executable
         #dig into the messages i need to receive for each variable defined
         # TODO: fix the math in equation 42 here and figure out how to display jointstates correctly. no tpublishin genough values for tf? set joint_states to only one link?
-        rospy.spin()
+
+
+
+    def update_callback(self, event):
+        # Make sure required variables (like self.theta) are set before updating.
+        if self.theta is None:
+            rospy.logwarn("Theta not yet set.")
+            return
+
+        output_nominal = self.external_forces()
+        self.visualize(output_nominal)
 
     def position_callback(self, data):
        robot_index = data.name.index('trikey_light')
@@ -109,7 +154,7 @@ class ContactJacobian():
     def torquecallback(self, data):   
         try:
             self.Ts = data.position
-            rospy.loginfo(f"Instantaneous torque for the wheels: {self.Ts} Nm")
+            # rospy.loginfo(f"Instantaneous torque for the wheels: {self.Ts} Nm")
             
         except ValueError:
             rospy.logwarn(f"Joints maybe not found in JointState message")
@@ -144,7 +189,7 @@ class ContactJacobian():
         #self.find_robot_vertices(self.theta)
         intersection = self.force_line_intersection(self.robot_vertices, tf_Fext)
     
-        return [intersection[0], intersection[1], self.Fextx, self.Fexty]
+        return [intersection[0], intersection[1], self.Fextx, self.Fexty] #Final Output
     
     def vector_transform(self, Fext):
         """ 
@@ -165,73 +210,45 @@ class ContactJacobian():
 
 
     def force_line_intersection(self, robot_vertices, Fext):
-        """ 
-        Solves parametric parameter s separately for two lines that it intersects
-        Finds the first intersection of the force vector
-        Need to transform the force vector to a local frame where the centroid of the robot body is (0,0)
-        *only rotational motion is considered
-
-        Parameters: 
-        self: instance of class
-        robot_vertices: the vertices of the robot
-
-        Return:
-        contact_point: The point where the external force first intersects the robot
         """
-        top_left, bottom_tip, top_right = robot_vertices[0], robot_vertices[1], robot_vertices[2]
+        Computes the intersection between the ray from the origin (0,0) in the direction of Fext 
+        and the edges of the triangle defined by robot_vertices.
+        Returns the intersection point closest to the origin.
+        """
+        intersections = []
+        
+        # Loop over each edge of the triangle. Ensure the triangle is closed by including the edge from the last to first vertex.
+        num_vertices = len(robot_vertices)
+        for i in range(num_vertices):
+            p = np.array([0.0, 0.0])               # Ray origin
+            r = np.array(Fext)                     # Ray direction
+            
+            q = np.array(robot_vertices[i])        # Start of edge
+            edge_end = robot_vertices[(i+1) % num_vertices]
+            s_vec = np.array(edge_end) - q           # Edge direction
 
-        # Edges of the triangle
-        edges = [(top_left, bottom_tip), (top_left, top_right), (bottom_tip, top_right)]
+            # Compute cross products (in 2D, a x b = a_x*b_y - a_y*b_x)
+            r_cross_s = r[0]*s_vec[1] - r[1]*s_vec[0]
+            if abs(r_cross_s) < 1e-6:
+                # Lines are parallel (or collinear); skip this edge.
+                continue
 
-        intersections = [] #parametric parameter along the edge. s in order will be point one edge 1, 2, then 3
-        edge_flag = [False, False, False]
-        edge_count = 0
-        contact_point = [0, 0]
-        # Loop through each edge of the triangle
-        #Centroid on the local frame is (0,0)
-        for edge_start, edge_end in edges: #checks for edge 1 to edge 2 to edge 3
-            edge_count += 1
-            s = (Fext[0]*(edge_start[1] - 0) - Fext[1]*(edge_start[0] - 0))/(Fext[1]*(edge_end[0] - edge_start[0]) - Fext[0]*(edge_end[1] - edge_end[1]))
-            if s >= 0 and s <= 1:
-                x = edge_start[0] + s*(edge_end[0] - edge_start[0])
-                y = edge_start[1] + s*(edge_end[1] - edge_start[0])
-                edge_flag[edge_count] = True
-                intersections.append((x, y))
-                
-        #The stuff for first contact point    
-        if Fext[0] != 0:
-            if edge_flag[0] == True and edge_flag[1] == True:
-                if Fext[1] > 0:
-                    contact_point = intersections[0]
-                else:
-                    contact_point = intersections[1]
-            if edge_flag[0] == True and edge_flag[2] ==True:
-                if Fext[0] > 0:
-                    contact_point = intersections[0]
-                else:
-                    contact_point[1] = intersections[1]
+            q_minus_p = q - p
+            t = (q_minus_p[0]*s_vec[1] - q_minus_p[1]*s_vec[0]) / r_cross_s
+            u = (q_minus_p[0]*r[1] - q_minus_p[1]*r[0]) / r_cross_s
 
-            if edge_flag[1] == True and edge_flag[2] ==True:
-                if Fext[1] > 0:
-                    contact_point = intersections[0]
-                else:
-                    contact_point = intersections[1]
-            else: #this is when m = 0, a horizontal line
-                if Fext[0] > 0:
-                    contact_point = intersections[0]
-
-                else:
-                    contact_point = intersections[1]
-        else: # slope in x is 0, vertical line
-            if Fext[1] > 0: 
-                if edge_flag[0] == True and edge_flag[1] == True: # edge1 and edge2
-                    contact_point = intersections[1]
-                else:
-                    contact_point = intersections[0]
-            else: # edge2 awnd edge 3
-                 contact_point = intersections[0]
- 
-        return contact_point
+            # t parameterizes the ray (should be >= 0) and u the edge (0<= u <= 1 for an intersection on the segment)
+            if t >= 0 and 0 <= u <= 1:
+                intersection = p + t * r
+                intersections.append((t, intersection))
+        
+        if not intersections:
+            rospy.logwarn("No valid intersection found for force line")
+            return [0.0, 0.0]
+        
+        # Choose the intersection with the smallest t (closest to the origin)
+        intersections.sort(key=lambda tup: tup[0])
+        return intersections[0][1].tolist()
 
     def global_point_transform(self, cp):
         """ 
@@ -261,20 +278,49 @@ class ContactJacobian():
             self.robot_vertices[index] = (x, y)
             index += 1
 
+
+    def visualize(self, output_nominal):
+        rospy.loginfo("Visualizing external force...")
+        contact_x, contact_y, Fextx, Fexty = output_nominal
+
+        start_point = Point(x=contact_x, y=contact_y, z=0.0)
+        scale = 1.0
+        end_point = Point(
+            x=contact_x + scale * Fextx,
+            y=contact_y + scale * Fexty,
+            z=0.0
+        )
+
+        self.marker.header.stamp = rospy.Time.now()
+        self.marker.points = [start_point, end_point]
+        self.pub.publish(self.marker)
+        rospy.loginfo("External force visualization complete.")
+
+
+
 def main():
-    rr=1 # roller radius
-    rw = 1 # wheel radius
-    R = 1 # 
-    BotMass=1.5
+    rr = 1  # roller radius
+    rw = 1  # wheel radius
+    R = 1
+    BotMass = 1.5
     RollerMass = 0
-    Br = 0.2 # roller damping, Nm
-    Iw = 1 # wheel inertia
-    Ir = 1 # roller inertia
-    Ib = 1# body inertia
-    TractionTorque = 1#This variable is modeled
-    ExternalTorque  = ContactJacobian(R, rw, rr, BotMass, Br, Iw, Ir, Ib, TractionTorque)
-    output_nominal= ExternalTorque.external_forces()
-    print(f"position of external force: {output_nominal}")
+    Br = 0.2  # roller damping, Nm
+    Iw = 1    # wheel inertia
+    Ir = 1    # roller inertia
+    Ib = 1    # body inertia
+    TractionTorque = 1  # modeled value
     
+    ExternalTorque = ContactJacobian(R, rw, rr, BotMass, Br, Iw, Ir, Ib, TractionTorque)
+    
+    # Wait until self.theta is set by the callback.
+    rate = rospy.Rate(10)  # 10 Hz
+    while ExternalTorque.theta is None and not rospy.is_shutdown():
+        rospy.logwarn("Waiting for theta to be set...")
+        rate.sleep()
+    
+    output_nominal = ExternalTorque.external_forces()
+    print(f"position of external force: {output_nominal}")    
+    rospy.spin()
+
 if __name__ == "__main__":
     main()
