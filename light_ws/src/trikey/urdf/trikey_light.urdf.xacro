@@ -176,9 +176,9 @@
     </inertial>
     <visual>
       <!-- Midpoint at (-0.25, -0.433, 0), rotated so the cylinder lies along the beam -->
-      <origin xyz="-0.85 -1.4722 1" rpy="0 -1.5708 -0.5236"/>
+      <origin xyz="-1.615 -2.79718 1" rpy="0 -1.5708 -0.5236"/>
       <geometry>
-               <cylinder radius="0.3" length="5"/>
+               <cylinder radius="0.3" length="7"/>
 
       </geometry>
       <material name="silver">
@@ -186,9 +186,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="-0.85 -1.4722 1" rpy="0 -1.5708 -0.5236"/>
+      <origin xyz="-1.615 -2.79718 1" rpy="0 -1.5708 -0.5236"/>
       <geometry>
-                <cylinder radius="0.3" length="5"/>
+                <cylinder radius="0.3" length="7"/>
 
       </geometry>
     </collision>
@@ -209,18 +209,18 @@
     </inertial>
     <visual>
       <!-- Midpoint at (0.5, 0, 0); beam angle ψ = +1.5708 rad -->
-      <origin xyz="1.7 0 1" rpy="0 -1.5708 1.5708"/>
+      <origin xyz="3.23 0 1" rpy="0 -1.5708 1.5708"/>
       <geometry>
-        <cylinder radius="0.3" length="5"/>
+        <cylinder radius="0.3" length="7"/>
       </geometry>
       <material name="silver">
         <color rgba="0.7 0.7 0.7 1.0"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="1.7 0 1" rpy="0 -1.5708 1.5708"/>
+      <origin xyz="3.23 0 1" rpy="0 -1.5708 1.5708"/>
       <geometry>
-        <cylinder radius="0.3" length="5"/>
+        <cylinder radius="0.3" length="7"/>
       </geometry>
     </collision>
   </link>
@@ -240,9 +240,9 @@
     </inertial>
     <visual>
       <!-- Midpoint at (-0.25, 0.433, 0); beam angle ψ = -2.61799 rad -->
-      <origin xyz="-0.85 1.4722 1" rpy="0 -1.5708 -2.61799"/>
+      <origin xyz="-1.615 2.79718 1" rpy="0 -1.5708 -2.61799"/>
       <geometry>
-                <cylinder radius="0.3" length="5"/>
+                <cylinder radius="0.3" length="7"/>
 
       </geometry>
       <material name="silver">
@@ -250,9 +250,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="-0.85 1.4722 1" rpy="0 -1.5708 -2.61799"/>
+      <origin xyz="-1.615 2.79718 1" rpy="0 -1.5708 -2.61799"/>
       <geometry>
-                <cylinder radius="0.3" length="5"/>
+                <cylinder radius="0.3" length="7"/>
 
       </geometry>
     </collision>
