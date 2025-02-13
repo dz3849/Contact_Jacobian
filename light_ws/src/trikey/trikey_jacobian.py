@@ -78,8 +78,8 @@ class ContactJacobian():
         self.x = None
         self.y = None
         #self.robot_vertices =[(0.250216,-0.144463), (0, 0.288925), (-0.250216,-0.144463)]
-        self.robot_vertices = [(-0.250216,0.144463),(0,-0.288925),(0.250216,0.144463)]
-
+        # self.robot_vertices = [(-0.250216,0.144463),(0,-0.288925),(0.250216,0.144463)]
+        self.robot_vertices = [(-3.4175, 0), (2.4, 3.36), (2.4, -3.36)]
         #Jacobian matrix for frame conversion all angles in radians
         
         self.wheel_angular_acceleration = None
@@ -210,45 +210,87 @@ class ContactJacobian():
 
 
     def force_line_intersection(self, robot_vertices, Fext):
-        """
-        Computes the intersection between the ray from the origin (0,0) in the direction of Fext 
-        and the edges of the triangle defined by robot_vertices.
-        Returns the intersection point closest to the origin.
-        """
-        intersections = []
-        
-        # Loop over each edge of the triangle. Ensure the triangle is closed by including the edge from the last to first vertex.
-        num_vertices = len(robot_vertices)
-        for i in range(num_vertices):
-            p = np.array([0.0, 0.0])               # Ray origin
-            r = np.array(Fext)                     # Ray direction
-            
-            q = np.array(robot_vertices[i])        # Start of edge
-            edge_end = robot_vertices[(i+1) % num_vertices]
-            s_vec = np.array(edge_end) - q           # Edge direction
+        """ 
+        Solves parametric parameter s separately for two lines that it intersects
+        Finds the first intersection of the force vector
+        Need to transform the force vector to a local frame where the centroid of the robot body is (0,0)
+        *only rotational motion is considered
 
-            # Compute cross products (in 2D, a x b = a_x*b_y - a_y*b_x)
-            r_cross_s = r[0]*s_vec[1] - r[1]*s_vec[0]
-            if abs(r_cross_s) < 1e-6:
-                # Lines are parallel (or collinear); skip this edge.
+        Parameters: 
+        self: instance of class
+        robot_vertices: the vertices of the robot
+
+        Return:
+        contact_point: The point where the external force first intersects the robot
+        """
+        top_left, bottom_tip, top_right = robot_vertices[0], robot_vertices[1], robot_vertices[2]
+
+        # Edges of the triangle
+        edges = [(top_left, bottom_tip), (top_left, top_right), (bottom_tip, top_right)]
+
+        intersections = [] #parametric parameter along the edge. s in order will be point one edge 1, 2, then 3
+        edge_flag = [False, False, False]
+        edge_count = -1
+        contact_point = [0, 0]
+        # Loop through each edge of the triangle
+        #Centroid on the local frame is (0,0)
+        for edge_start, edge_end in edges: #checks for edge 1 to edge 2 to edge 3
+            edge_count += 1
+            # s = (Fext[0]*(edge_start[1] - 0) - Fext[1]*(edge_start[0] - 0))/(Fext[1]*(edge_end[0] - edge_start[0]) - Fext[0]*(edge_end[1] - edge_end[1]))
+            # Calculate the denominator correctly
+            denom = (Fext[1] * (edge_end[0] - edge_start[0])
+                    - Fext[0] * (edge_end[1] - edge_start[1]))
+
+            # Avoid division by zero if denom == 0
+            if abs(denom) < 1e-12:
                 continue
 
-            q_minus_p = q - p
-            t = (q_minus_p[0]*s_vec[1] - q_minus_p[1]*s_vec[0]) / r_cross_s
-            u = (q_minus_p[0]*r[1] - q_minus_p[1]*r[0]) / r_cross_s
+            # Parametric "s" for the edge
+            s = ((Fext[0] * edge_start[1]) - (Fext[1] * edge_start[0])) / denom
+            if s >= 0 and s <= 1:
+            
+                x = edge_start[0] + s * (edge_end[0] - edge_start[0])
+                y = edge_start[1] + s * (edge_end[1] - edge_start[0])
+                edge_flag[edge_count] = True
+                intersections.append((x, y))
 
-            # t parameterizes the ray (should be >= 0) and u the edge (0<= u <= 1 for an intersection on the segment)
-            if t >= 0 and 0 <= u <= 1:
-                intersection = p + t * r
-                intersections.append((t, intersection))
-        
-        if not intersections:
-            rospy.logwarn("No valid intersection found for force line")
-            return [0.0, 0.0]
-        
-        # Choose the intersection with the smallest t (closest to the origin)
-        intersections.sort(key=lambda tup: tup[0])
-        return intersections[0][1].tolist()
+        #The stuff for first contact point    
+
+        if Fext[0] != 0:
+            if edge_flag[0] == True and edge_flag[1] == True:
+                if Fext[1] > 0:
+                    contact_point = intersections[0]
+                else:
+                    contact_point = intersections[1]
+            if edge_flag[0] == True and edge_flag[2] ==True:
+                if Fext[0] > 0:
+                    contact_point = intersections[0]
+                else:
+                    contact_point[1] = intersections[1]
+
+            if edge_flag[1] == True and edge_flag[2] ==True:
+                if Fext[1] > 0:
+                    contact_point = intersections[0]
+                else:
+                    contact_point = intersections[1]
+            else: #this is when m = 0, a horizontal line
+                if Fext[0] > 0:
+                    contact_point = intersections[0]
+
+                else:
+                    contact_point = intersections[1]
+        else: # slope in x is 0, vertical line
+            if Fext[1] > 0: 
+                if edge_flag[0] == True and edge_flag[1] == True: # edge1 and edge2
+                    contact_point = intersections[1]
+                else:
+                    contact_point = intersections[0]
+            else: # edge2 awnd edge 3
+                 contact_point = intersections[0]
+ 
+        return contact_point
+
+
 
     def global_point_transform(self, cp):
         """ 
@@ -284,7 +326,7 @@ class ContactJacobian():
         contact_x, contact_y, Fextx, Fexty = output_nominal
 
         end_point = Point(x=contact_x, y=contact_y, z=0.0)
-        scale = 1.0
+        scale = 0.1
         start_point = Point(
             x=contact_x + scale * Fextx,
             y=contact_y + scale * Fexty,
