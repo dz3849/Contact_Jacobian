@@ -283,9 +283,9 @@ class ContactJacobian():
         rospy.loginfo("Visualizing external force...")
         contact_x, contact_y, Fextx, Fexty = output_nominal
 
-        start_point = Point(x=contact_x, y=contact_y, z=0.0)
+        end_point = Point(x=contact_x, y=contact_y, z=0.0)
         scale = 1.0
-        end_point = Point(
+        start_point = Point(
             x=contact_x + scale * Fextx,
             y=contact_y + scale * Fexty,
             z=0.0
