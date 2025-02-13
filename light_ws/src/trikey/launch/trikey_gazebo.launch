@@ -21,7 +21,7 @@
     <node name="spawning_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model trikey_light -param robot_description"/>
     <rosparam file="$(find trikey)/config/joint_controller.yaml" command="load"/>
     <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" respawn="false" ns="/trikey_light"
-      args="joint_state_controller wheel_joint_effort_controller_1 wheel_joint_effort_controller_2 wheel_joint_effort_controller_3" />  
+      args="joint_state_controller wheel_joint_velocity_controller_1 wheel_joint_velocity_controller_2 wheel_joint_velocity_controller_3" />  
 
 
 </launch>

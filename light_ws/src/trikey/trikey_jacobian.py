@@ -64,14 +64,9 @@ class ContactJacobian():
         self.marker.scale.y = 0.1
         self.marker.scale.z = 0.1
         self.marker.color.a = 1.0
-        self.marker.color.r = 1.0
-        self.marker.color.g = 0.0
-        self.marker.color.b = 0.0
-
-    
-
-
-
+        self.marker.color.r = 0.0
+        self.marker.color.g = 1.0
+        self.marker.color.b = 1.0
 
 
         self.Ts = None
@@ -79,7 +74,12 @@ class ContactJacobian():
         self.y = None
         #self.robot_vertices =[(0.250216,-0.144463), (0, 0.288925), (-0.250216,-0.144463)]
         # self.robot_vertices = [(-0.250216,0.144463),(0,-0.288925),(0.250216,0.144463)]
-        self.robot_vertices = [(-3.4175, 0), (2.4, 3.36), (2.4, -3.36)]
+
+
+        # self.robot_vertices = [(2.4, 3.36),(-3.4175, 0),(2.4, -3.36)]
+
+        self.robot_vertices = [(2.4, 3.36),(-3.4175, 0),(2.4, -3.36)]
+
         #Jacobian matrix for frame conversion all angles in radians
         
         self.wheel_angular_acceleration = None
@@ -327,11 +327,7 @@ class ContactJacobian():
 
         end_point = Point(x=contact_x, y=contact_y, z=0.0)
         scale = 0.1
-        start_point = Point(
-            x=contact_x + scale * Fextx,
-            y=contact_y + scale * Fexty,
-            z=0.0
-        )
+        start_point = Point( x=contact_x *-Fextx,  y=contact_y *-Fexty,z=0.0)
 
         self.marker.header.stamp = rospy.Time.now()
         self.marker.points = [start_point, end_point]
