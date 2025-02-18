@@ -30,7 +30,7 @@ class ContactJacobian():
         self.Jcr = None
         self.Jcrdot = None
 
-        rospy.init_node("BumpyBotNode", anonymous=True)
+        rospy.init_node("Contact_Jacobian", anonymous=True)
 
         self.sub_body = rospy.Subscriber("/gazebo/model_states", ModelStates, callback = self.position_callback) 
         self.theta = None
