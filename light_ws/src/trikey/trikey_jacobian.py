@@ -171,7 +171,7 @@ class ContactJacobian():
         self.TNom = np.linalg.inv(transpose_wheel)*(self.M*self.acceleration+self.Br) + self.Ir*self.wheel_angular_acceleration #THIS LINE IS NOT NEEDED
     
     def torque_no_fext(self):
-        return np.matmul(np.linalg.inv(np.transpose(self.Jcw)), (self.M*self.acceleration) + np.matmul(np.transpose(self.Jcr), self.Br))#equation 38 without transpose(Jcr)
+        return np.matmul(np.linalg.inv(np.transpose(self.Jcw)), (self.M*self.acceleration) + np.matmul(np.transpose(self.Jcr), self.Br))#equation 38 
             
     # need help on hte last row of equation 42
     def external_forces(self): 
@@ -180,7 +180,7 @@ class ContactJacobian():
         rospy.loginfo(f"nominal toruqe:{self.T_ext_not}")
         
         rospy.loginfo(f"Sensed Torque: {self.Ts}")
-        RH_Matrix = np.matmul(np.linalg.inv(np.transpose(self.Jcw)), self.T_ext_not - self.Ts) # self.Ts
+        RH_Matrix = np.matmul((np.transpose(self.Jcw)), self.T_ext_not - self.Ts) # self.Ts
         rospy.loginfo(f"RH Matrix: {RH_Matrix}")
         self.Fextx = RH_Matrix[0][0]
         self.Fexty = RH_Matrix[1][0]
