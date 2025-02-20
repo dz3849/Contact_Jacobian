@@ -9,7 +9,7 @@
             <inertia ixx="2.0" ixy="0.0" ixz="0.0" iyy="2.0" iyz="0.0" izz="2.0"/>
         </inertial> -->
         <visual>
-            <origin xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
+            <origin xyz="0.0 0.0 1" rpy="0.0 0.0 0.0"/>
             <geometry>
                 <cylinder radius="0.6" length="0.5"/>
             </geometry>
@@ -18,18 +18,52 @@
             </material>
         </visual>
         <collision>
-            <origin xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
+            <origin xyz="0.0 0.0 1.2" rpy="0.0 0.0 0.0"/>
             <geometry>
                 <cylinder radius="0.6" length="0.5"/>
             </geometry>
         </collision>
     </link>
+
+
+<!-- Body Link (Raises Center of Mass)-->
+    <link name="body_link">
+        <inertial>
+            <origin xyz="0.0 0.0 0" rpy="0.0 0.0 0.0"/>
+            <mass value="20"/>
+            <inertia ixx="2.0" ixy="0.0" ixz="0.0" iyy="2.0" iyz="0.0" izz="2.0"/>
+        </inertial>
+        <visual>
+            <origin xyz="0.0 0.0 0" rpy="0.0 0.0 0.0"/>
+            <geometry>
+                <cylinder radius="0.6" length="0.5"/>
+            </geometry>
+            <material name="gray">
+                <color rgba="0.5 0.5 0.5 1.0"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0.0 0.0 0" rpy="0.0 0.0 0.0"/>
+            <geometry>
+                <cylinder radius="0.6" length="0.5"/>
+            </geometry>
+        </collision>
+    </link>
+
+<!-- Body to Center Joint -->
+<joint name="center_joint" type="fixed">
+    <origin xyz="0 0 0.5" rpy="0 0 0"/>
+    <child link="body_link"/>
+    <parent link="center_link"/>
+</joint>
+
+
   <xacro:macro name="shaft_wheel" params="id x y rpy">
     <!-- Shaft -->
     <link name="shaft_link_${id}">
       <inertial>
         <origin xyz="0.0 1.2 1.0" rpy="1.5708 0.0 0.0"/>
-        <mass value="1.0"/>
+        <mass value="5"/>
         <inertia ixx="1.333" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="1.333"/>
       </inertial>
       <visual>
@@ -51,7 +85,7 @@
 
     <!-- Fixed joint attaching the shaft to the robot base -->
     <joint name="base_joint_${id}" type="fixed">
-      <origin xyz="${x} ${y} 0.0" rpy="0.0 0.0 ${rpy}"/>
+      <origin xyz="${x} ${y} -0.5" rpy="0.0 0.0 ${rpy}"/>
       <parent link="center_link"/>
       <child link="shaft_link_${id}"/>
     </joint>
@@ -59,9 +93,9 @@
     <!-- Wheel Link -->
     <link name="wheel_link_${id}">
       <inertial>
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-        <mass value="0.5"/>
-        <inertia ixx="0.5" ixy="0.0" ixz="0.0" iyy="0.25" iyz="0.0" izz="0.5"/>
+        <origin xyz="0.0 0.0 -0.2" rpy="0.0 0.0 0.0"/>
+        <mass value="2"/>
+        <inertia ixx="0.25" ixy="0.0" ixz="0.0" iyy="0.25" iyz="0.0" izz="0.5"/>
       </inertial>
       <visual>
         <origin xyz="0.0 0.0 -0.2" rpy="0.0 0.0 0.0"/>
@@ -84,12 +118,12 @@
               <kp>1e5</kp>
               <kd>1e3</kd>
               <max_vel>2</max_vel>
-              <min_depth>0.001</min_depth>
+              <min_depth>0.003</min_depth>
           </ode>
         </contact>
       </surface>
       <collision>
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.0 -0.2" rpy="0.0 0.0 0.0"/>
         <geometry>
           <cylinder radius="1.0" length="0.3"/>
         </geometry>
@@ -102,7 +136,7 @@
       <parent link="shaft_link_${id}"/>
       <child link="wheel_link_${id}"/>
       <axis xyz="0.0 0.0 1.0"/>
-      <limit effort="100.0" velocity="10.0"/>
+      <limit effort="500.0" velocity="10.0"/>
     <provideFeedback>true</provideFeedback>
       <physics>
             <provideFeedback>true</provideFeedback>
