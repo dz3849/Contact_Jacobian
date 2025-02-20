@@ -61,8 +61,8 @@ class ContactJacobian():
         self.marker.pose.orientation.y = 0
         self.marker.pose.orientation.z = 0
         self.marker.pose.orientation.w = 1
-        self.marker.scale.x = 0.1
-        self.marker.scale.y = 0.1
+        self.marker.scale.x = 0.3
+        self.marker.scale.y = 0.3
         self.marker.scale.z = 0.1
         self.marker.color.a = 1.0
         self.marker.color.r = 0.0
@@ -103,7 +103,6 @@ class ContactJacobian():
 
     def position_callback(self, data):
        robot_index = data.name.index('trikey_light')
-
        robot_pose = data.pose[robot_index].orientation
        self.x = robot_pose.x
        self.y = robot_pose.y
@@ -119,7 +118,7 @@ class ContactJacobian():
             self.roller_angular_velocity = np.matmul(self.Jcr, self.velocity)
 
             self.omega =robot_twist.angular.z
-
+            # rospy.loginfo(f"Robot velocity: {self.velocity}")
         except ValueError:
             rospy.logerr("Robot model 'trikey_light' not found in /gazebo/model_states")
         except Exception as e:
@@ -179,11 +178,11 @@ class ContactJacobian():
     def external_forces(self): 
         self.NominalTorque()
         self.T_ext_not = self.torque_no_fext()
-        rospy.loginfo(f"nominal toruqe:{self.T_ext_not}")
+       # rospy.loginfo(f"nominal toruqe:{self.T_ext_not}")
         
-        rospy.loginfo(f"Sensed Torque: {self.Ts}")
+      #  rospy.loginfo(f"Sensed Torque: {self.Ts}")
         RH_Matrix = np.matmul((np.transpose(self.Jcw)), self.T_ext_not - self.Ts) # self.Ts
-        rospy.loginfo(f"RH Matrix: {RH_Matrix}")
+        #rospy.loginfo(f"RH Matrix: {RH_Matrix}")
         self.Fextx = RH_Matrix[0][0]
         self.Fexty = RH_Matrix[1][0]
         Fext = [self.Fextx, self.Fexty]
@@ -232,12 +231,20 @@ class ContactJacobian():
         edges = [(top_left, bottom_tip), (top_left, top_right), (bottom_tip, top_right)]
 
         intersections = [] #parametric parameter along the edge. s in order will be point one edge 1, 2, then 3
-        edge_flag = [False, False, False]ntact_x *-Fextx,  y=contact_
+        edge_flag = [False, False, False]
         edge_count = -1
         contact_point = [0, 0]
         # Loop through each edge of the triangle
         #Centroid on the local frame is (0,0)
-        for edge_start, edge_end in edges: #checks for edge 1 to edge ntact_x *-Fextx,  y=contact_
+        for edge_start, edge_end in edges: #checks for edge 1 to edge 2 to edge 3
+            edge_count += 1
+            # s = (Fext[0]*(edge_start[1] - 0) - Fext[1]*(edge_start[0] - 0))/(Fext[1]*(edge_end[0] - edge_start[0]) - Fext[0]*(edge_end[1] - edge_end[1]))
+            # Calculate the denominator correctly
+            denom = (Fext[1] * (edge_end[0] - edge_start[0])
+                    - Fext[0] * (edge_end[1] - edge_start[1]))
+
+        
+
             # Avoid division by zero if denom == 0
             if abs(denom) < 1e-12:
                 continue
@@ -323,14 +330,69 @@ class ContactJacobian():
         rospy.loginfo("Visualizing external force...")
         contact_x, contact_y, Fextx, Fexty = output_nominal
 
+        # Normalize the external force vector (keep the direction only)
+        norm = np.sqrt(Fextx**2 + Fexty**2)
+        if norm != 0:
+            unit_Fx = Fextx / norm
+            unit_Fy = Fexty / norm
+        else:
+            unit_Fx = 0
+            unit_Fy = 0
+
+
+        # Fixed arrow length of 4; arrow now goes from the tip back to the contact point
+        arrow_length = 4.0
+        # The arrow now starts at the tip and ends at the contact point
+        start_point = Point(
+            x=contact_x + arrow_length * unit_Fx,
+            y=contact_y + arrow_length * unit_Fy,
+            z=0.0
+        )
         end_point = Point(x=contact_x, y=contact_y, z=0.0)
         scale = 0.1
-        start_point = Point(x=contact_x *-Fextx,  y=contact_y *-Fexty,z=0.0)
+        # start_point = Point(x=contact_x *-Fextx,  y=contact_y *-Fexty,z=0.0)
+
+        # ----- Auto-compute bounds for force magnitude -----
+        # Initialize self.force_max on first call if not set.
+        if not hasattr(self, "force_max"):
+            self.force_max = norm if norm > 1e-3 else 1e-3
+        # Use an exponential moving average to update the maximum
+        alpha = 0.1  # Smoothing factor
+        self.force_max = max(self.force_max * (1 - alpha) + norm * alpha, norm, 1e-3)
+
+        # Compute ratio relative to the current maximum force
+        ratio = min(norm / self.force_max, 1.0)
+
+        # Map the force magnitude to a color from blue (low force) to red (high force)
+        # Blue at low forces, red at high forces.
+        r = ratio          # increases with force magnitude
+        g = 0.0
+        b = 1.0 - ratio    # decreases with force magnitude
+
+        self.marker.color.r = r
+        self.marker.color.g = g
+        self.marker.color.b = b
 
         self.marker.header.stamp = rospy.Time.now()
         self.marker.points = [start_point, end_point]
         self.pub.publish(self.marker)
         rospy.loginfo("External force visualization complete.")
+
+        
+    # def visualize(self, output_nominal):
+    #     rospy.loginfo("Visualizing external force...")
+    #     contact_x, contact_y, Fextx, Fexty = output_nominal
+
+    #     end_point = Point(x=contact_x, y=contact_y, z=0.0)
+    #     scale = 0.01
+    #     start_point = Point( x=contact_x *-Fextx,  y=contact_y *-Fexty,z=0.0)
+
+    #     self.marker.header.stamp = rospy.Time.now()
+    #     self.marker.points = [start_point, end_point]
+    #     self.pub.publish(self.marker)
+    #     rospy.loginfo("External force visualization complete.")
+
+
 
 
 
