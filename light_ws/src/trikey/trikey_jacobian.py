@@ -36,6 +36,7 @@ class ContactJacobian():
         self.theta = None
         rospy.Subscriber("/gazebo/model_states", ModelStates , callback = self.thetacallback) # absolute orientation of the wheel
         self.velocity = None
+        self.omega = None
         rospy.Subscriber("/gazebo/model_states", Twist, callback = self.vel_callback) # this is a vector
         self.base_angular_acceleration = None
         rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
@@ -117,6 +118,7 @@ class ContactJacobian():
             self.wheel_angular_velocity = np.matmul(self.Jcw, self.velocity)
             self.roller_angular_velocity = np.matmul(self.Jcr, self.velocity)
 
+            self.omega =robot_twist.angular.z
 
         except ValueError:
             rospy.logerr("Robot model 'trikey_light' not found in /gazebo/model_states")
@@ -144,8 +146,8 @@ class ContactJacobian():
 
             self.Jcr = 1/self.rr*np.array([[np.cos(self.theta), np.sin(self.theta), 0], [np.cos(self.theta + 2/3*np.pi),
                 np.sin(self.theta + 2/3*np.pi), 0], [np.cos(self.theta + 4/3*np.pi), np.sin(self.theta + 4/3*np.pi), 0]])#equation 16
-            self.Jcrdot = 1/self.rr*np.array([[-np.sin(self.theta), np.cos(self.theta), self.R ], [-np.sin(self.theta + 2/3*np.pi),
-                np.cos(self.theta + 2/3*np.pi), self.R ], [-np.sin(self.theta + 4/3*np.pi), np.cos(self.theta + 4/3*np.pi), self.R]])
+            self.Jcrdot = 1/self.rr*np.array([[-np.sin(self.theta), np.cos(self.theta), 0 ], [-np.sin(self.theta + 2/3*np.pi),
+                np.cos(self.theta + 2/3*np.pi), 0 ], [-np.sin(self.theta + 4/3*np.pi), np.cos(self.theta + 4/3*np.pi), 0]])
             #rospy.loginfo (f"inverse jacobian {self.Jcwdot_inv}")
             #rospy.loginfo(f"Robot yaw angle: {self.theta} radians")
         except ValueError:
@@ -163,15 +165,15 @@ class ContactJacobian():
 
     def NominalTorque(self):
         transpose_wheel = np.transpose(self.Jcw)
-        self.wheel_angular_acceleration = [[6*(np.pi**2)*((self.theta)**2)*np.cos(2*np.pi*self.theta*self.t.to_sec())], [0], [0]]#given before equation 29 #assuming wheel trajectory angle is theta since it's wheel 0
-        self.angular_vel_wheel= [[3*np.pi*self.theta*np.sin(2*np.pi*self.theta*self.t.to_sec())], [0], [0]]
+        self.wheel_angular_acceleration = [[6*(np.pi**2)*((self.omega)**2)*np.cos(2*np.pi*self.omega*self.t.to_sec())], [0], [0]]#given before equation 29 #assuming wheel trajectory angle is theta since it's wheel 0
+        self.angular_vel_wheel= [[3*np.pi*self.omega*np.sin(2*np.pi*self.omega*self.t.to_sec())], [0], [0]]
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.matmul(np.linalg.inv(self.Jcwdot), self.wheel_angular_velocity) #equation 29
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
         self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheel) #FOR THE LOVE OF GOD CHANGE THIS SHIT PLEASE I CANNOT FORGET IT AGAIN
         self.TNom = np.linalg.inv(transpose_wheel)*(self.M*self.acceleration+self.Br) + self.Ir*self.wheel_angular_acceleration #THIS LINE IS NOT NEEDED
     
     def torque_no_fext(self):
-        return np.matmul(np.linalg.inv(np.transpose(self.Jcw)), (self.M*self.acceleration) + np.matmul(np.transpose(self.Jcr), self.Br))#equation 38 
+        return np.matmul((np.transpose(self.Jcwinv)), (self.M*self.acceleration) + np.matmul(np.transpose(self.Jcr), self.Br))#equation 38 
             
     # need help on hte last row of equation 42
     def external_forces(self): 
@@ -188,6 +190,7 @@ class ContactJacobian():
         tf_Fext = self.vector_transform(Fext)
         #self.find_robot_vertices(self.theta)
         intersection = self.force_line_intersection(self.robot_vertices, tf_Fext)
+        rospy.loginfo(f"Stats:{intersection[0]} {intersection[0]} {self.Fextx} {self.Fexty}")
     
         return [intersection[0], intersection[1], self.Fextx, self.Fexty] #Final Output
     
@@ -229,18 +232,12 @@ class ContactJacobian():
         edges = [(top_left, bottom_tip), (top_left, top_right), (bottom_tip, top_right)]
 
         intersections = [] #parametric parameter along the edge. s in order will be point one edge 1, 2, then 3
-        edge_flag = [False, False, False]
+        edge_flag = [False, False, False]ntact_x *-Fextx,  y=contact_
         edge_count = -1
         contact_point = [0, 0]
         # Loop through each edge of the triangle
         #Centroid on the local frame is (0,0)
-        for edge_start, edge_end in edges: #checks for edge 1 to edge 2 to edge 3
-            edge_count += 1
-            # s = (Fext[0]*(edge_start[1] - 0) - Fext[1]*(edge_start[0] - 0))/(Fext[1]*(edge_end[0] - edge_start[0]) - Fext[0]*(edge_end[1] - edge_end[1]))
-            # Calculate the denominator correctly
-            denom = (Fext[1] * (edge_end[0] - edge_start[0])
-                    - Fext[0] * (edge_end[1] - edge_start[1]))
-
+        for edge_start, edge_end in edges: #checks for edge 1 to edge ntact_x *-Fextx,  y=contact_
             # Avoid division by zero if denom == 0
             if abs(denom) < 1e-12:
                 continue
@@ -253,10 +250,11 @@ class ContactJacobian():
                 y = edge_start[1] + s * (edge_end[1] - edge_start[0])
                 edge_flag[edge_count] = True
                 intersections.append((x, y))
-
+        if Fext[0] == 0 and Fext[1] == 0:
+            rospy.loginfo("No intersection")
         #The stuff for first contact point    
 
-        if Fext[0] != 0:
+        elif Fext[0] != 0:
             if edge_flag[0] == True and edge_flag[1] == True:
                 if Fext[1] > 0:
                     contact_point = intersections[0]
@@ -327,7 +325,7 @@ class ContactJacobian():
 
         end_point = Point(x=contact_x, y=contact_y, z=0.0)
         scale = 0.1
-        start_point = Point( x=contact_x *-Fextx,  y=contact_y *-Fexty,z=0.0)
+        start_point = Point(x=contact_x *-Fextx,  y=contact_y *-Fexty,z=0.0)
 
         self.marker.header.stamp = rospy.Time.now()
         self.marker.points = [start_point, end_point]
