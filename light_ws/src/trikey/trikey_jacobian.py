@@ -267,34 +267,33 @@ class ContactJacobian():
                     contact_point = intersections[0]
                 else:
                     contact_point = intersections[1]
+
             if edge_flag[0] == True and edge_flag[2] ==True:
                 if Fext[0] > 0:
                     contact_point = intersections[0]
                 else:
-                    contact_point[1] = intersections[1]
+                    contact_point = intersections[1]
 
             if edge_flag[1] == True and edge_flag[2] ==True:
                 if Fext[1] > 0:
-                    contact_point = intersections[0]
-                else:
-                    contact_point = intersections[1]
-            else: #this is when m = 0, a horizontal line
-                if Fext[0] > 0:
-                    contact_point = intersections[0]
-
-                else:
-                    contact_point = intersections[1]
-        else: # slope in x is 0, vertical line
-            if Fext[1] > 0: 
-                if edge_flag[0] == True and edge_flag[1] == True: # edge1 and edge2
                     contact_point = intersections[1]
                 else:
                     contact_point = intersections[0]
-            else: # edge2 awnd edge 3
-                 contact_point = intersections[0]
+        #     else: #this is when m = 0, a horizontal line, probably dont need this no more
+        #         if Fext[0] > 0:
+        #             contact_point = intersections[0]
+        #         else:
+        #             contact_point = intersections[1]
+        # else: # slope in x is 0, vertical line This is likely not called
+        #     if Fext[1] > 0: 
+        #         if edge_flag[0] == True and edge_flag[1] == True: # edge1 and edge2
+        #             contact_point = intersections[0]
+        #         else: #edge 2 and edge 1
+        #             contact_point = intersections[1]
+        #     else: # edge2 and edge 3
+        #          contact_point = intersections[0]
  
         return contact_point
-
 
 
     def global_point_transform(self, cp):
