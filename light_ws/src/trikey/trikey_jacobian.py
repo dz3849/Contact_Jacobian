@@ -48,7 +48,7 @@ class ContactJacobian():
         #create basic marker to visualize the external force
         self.pub = rospy.Publisher("external_force", Marker, queue_size=10)
         self.marker = Marker() 
-        self.marker.header.frame_id = "center_link"
+        self.marker.header.frame_id = "base_link"
         self.marker.header.stamp = rospy.Time.now()
         self.marker.ns = "external_force"
         self.marker.id = 0

@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="trikey_light">
 
    <!-- Central Body -->
-    <link name="center_link">
+    <link name="base_link">
         <!-- <inertial>
             <origin xyz="0.0 0.0 1.0" rpy="0.0 0.0 0.0"/>
             <mass value="3.0"/>
@@ -54,7 +54,7 @@
 <joint name="center_joint" type="fixed">
     <origin xyz="0 0 0.5" rpy="0 0 0"/>
     <child link="body_link"/>
-    <parent link="center_link"/>
+    <parent link="base_link"/>
 </joint>
 
 
@@ -86,7 +86,7 @@
     <!-- Fixed joint attaching the shaft to the robot base -->
     <joint name="base_joint_${id}" type="fixed">
       <origin xyz="${x} ${y} -0.5" rpy="0.0 0.0 ${rpy}"/>
-      <parent link="center_link"/>
+      <parent link="base_link"/>
       <child link="shaft_link_${id}"/>
     </joint>
 
@@ -136,7 +136,7 @@
       <parent link="shaft_link_${id}"/>
       <child link="wheel_link_${id}"/>
       <axis xyz="0.0 0.0 1.0"/>
-      <limit effort="500.0" velocity="10.0"/>
+      <limit effort="300.0" velocity="10.0"/>
     <provideFeedback>true</provideFeedback>
       <physics>
             <provideFeedback>true</provideFeedback>
@@ -156,6 +156,8 @@
         </sensor>
       </gazebo>
     </joint>
+
+    
 
     <!-- Transmission referencing the continuous joint -->
     <transmission name="wheel_joint_transmission_${id}">
@@ -200,6 +202,60 @@
       y="${r * sin(theta3)}"
       rpy="${theta3 + rotate90}"
   />
+
+  <!-- Macro to add a cover bar for a wheel -->
+<xacro:macro name="wheel_cover_bar" params="id pos_x pos_y pos_z rpy_x rpy_y rpy_z length">
+  <link name="wheel_cover_${id}">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.05"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <!-- The cylinder represents the bar cover. Its radius matches the roll cage (0.3) -->
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.3" length="${length}"/>
+      </geometry>
+      <material name="cover_material">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.3" length="${length}"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="wheel_cover_joint_${id}" type="fixed">
+    <origin xyz="${pos_x} ${pos_y} ${pos_z}" rpy="${rpy_x} ${rpy_y} ${rpy_z}"/>
+    <parent link="base_link"/>
+    <child link="wheel_cover_${id}"/>
+  </joint>
+</xacro:macro>
+
+<xacro:wheel_cover_bar 
+    id="1" 
+    pos_x="-4.4" pos_y="0" pos_z="1" 
+    rpy_x="0" rpy_y="1.5708" rpy_z="1.5708" 
+    length="1.65"/>
+
+<!-- Cover for Wheel 2 (located at (0.5,-0.866)) -->
+<xacro:wheel_cover_bar 
+    id="2" 
+    pos_x="2.2" pos_y="-3.81" pos_z="1" 
+    rpy_x="0" rpy_y="1.5708" rpy_z="-2.61799" 
+    length="1.65"/>
+
+<!-- Cover bar for Wheel 3 (connecting rollcage_23 and rollcage_31) -->
+<xacro:wheel_cover_bar 
+    id="3" 
+    pos_x="2.2" pos_y="3.81" pos_z="1" 
+    rpy_x="0" rpy_y="1.5708" rpy_z="2.61799" 
+    length="1.65"/>
+
   <!-- Roll Cage Beam between wheel 1 and wheel 2 -->
   <link name="rollcage_12">
     <inertial>
@@ -212,7 +268,7 @@
       <!-- Midpoint at (-0.25, -0.433, 0), rotated so the cylinder lies along the beam -->
       <origin xyz="-1.615 -2.79718 1" rpy="0 -1.5708 -0.5236"/>
       <geometry>
-               <cylinder radius="0.3" length="7"/>
+               <cylinder radius="0.3" length="6.7"/>
 
       </geometry>
       <material name="silver">
@@ -222,14 +278,14 @@
     <collision>
       <origin xyz="-1.615 -2.79718 1" rpy="0 -1.5708 -0.5236"/>
       <geometry>
-                <cylinder radius="0.3" length="7"/>
+                <cylinder radius="0.3" length="6.7"/>
 
       </geometry>
     </collision>
   </link>
   <joint name="rollcage_joint_12" type="fixed">
     <origin xyz="0 0 0" rpy="0 0 0"/>
-    <parent link="center_link"/>
+    <parent link="base_link"/>
     <child link="rollcage_12"/>
   </joint>
 
@@ -245,7 +301,7 @@
       <!-- Midpoint at (0.5, 0, 0); beam angle ψ = +1.5708 rad -->
       <origin xyz="3.23 0 1" rpy="0 -1.5708 1.5708"/>
       <geometry>
-        <cylinder radius="0.3" length="7"/>
+        <cylinder radius="0.3" length="6.7"/>
       </geometry>
       <material name="silver">
         <color rgba="0.7 0.7 0.7 1.0"/>
@@ -254,13 +310,13 @@
     <collision>
       <origin xyz="3.23 0 1" rpy="0 -1.5708 1.5708"/>
       <geometry>
-        <cylinder radius="0.3" length="7"/>
+        <cylinder radius="0.3" length="6.5"/>
       </geometry>
     </collision>
   </link>
   <joint name="rollcage_joint_23" type="fixed">
     <origin xyz="0 0 0" rpy="0 0 0"/>
-    <parent link="center_link"/>
+    <parent link="base_link"/>
     <child link="rollcage_23"/>
   </joint>
 
@@ -276,7 +332,7 @@
       <!-- Midpoint at (-0.25, 0.433, 0); beam angle ψ = -2.61799 rad -->
       <origin xyz="-1.615 2.79718 1" rpy="0 -1.5708 -2.61799"/>
       <geometry>
-                <cylinder radius="0.3" length="7"/>
+                <cylinder radius="0.3" length="6.7"/>
 
       </geometry>
       <material name="silver">
@@ -286,17 +342,18 @@
     <collision>
       <origin xyz="-1.615 2.79718 1" rpy="0 -1.5708 -2.61799"/>
       <geometry>
-                <cylinder radius="0.3" length="7"/>
+                <cylinder radius="0.3" length="6.7"/>
 
       </geometry>
     </collision>
   </link>
   <joint name="rollcage_joint_31" type="fixed">
     <origin xyz="0 0 0" rpy="0 0 0"/>
-    <parent link="center_link"/>
+    <parent link="base_link"/>
     <child link="rollcage_31"/>
   </joint>
 
+  
 
   <gazebo>
       <provideFeedback>true</provideFeedback>
