@@ -29,8 +29,9 @@ class ContactJacobian():
         self.Jcwdot = None
         self.Jcr = None
         self.Jcrdot = None
-
-        rospy.init_node("Contact_Jacobian", anonymous=True)
+        self.t = None
+        self.t_now = None
+        self.t_last=None
 
         self.sub_body = rospy.Subscriber("/gazebo/model_states", ModelStates, callback = self.position_callback) 
         self.theta = None
@@ -40,10 +41,7 @@ class ContactJacobian():
         rospy.Subscriber("/gazebo/model_states", Twist, callback = self.vel_callback) # this is a vector
         self.base_angular_acceleration = None
         rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
-        self.t  = rospy.get_rostime()
         #rospy.Subscriber("/clock", Time, self.time_callback)
-
-        self.timer = rospy.Timer(rospy.Duration(0.1), self.update_callback)
 
         #create basic marker to visualize the external force
         self.pub = rospy.Publisher("external_force", Marker, queue_size=10)
@@ -85,6 +83,7 @@ class ContactJacobian():
         
         self.wheel_angular_acceleration = None
         self.acceleration = None
+        self.timer = rospy.Timer(rospy.Duration(0.1), self.update_callback)
         # get robot values from old paper or frank
         #chmod +x the file to make it executable
         #dig into the messages i need to receive for each variable defined
@@ -93,6 +92,19 @@ class ContactJacobian():
 
 
     def update_callback(self, event):
+        if self.t_last is None: 
+            self.t_last = rospy.get_time()
+            return
+        
+        self.t_now  = rospy.get_time() # float seconds
+        self.t = self.t_now - self.t_last
+        self.t_last = self.t_now
+
+        if self.t_now is None or self.t is None:
+            rospy.logwarn("t_now or t is none. Possible timing issue.")
+            return
+        rospy.logwarn(self.t)
+
         # Make sure required variables (like self.theta) are set before updating.
         if self.theta is None:
             rospy.logwarn("Theta not yet set.")
@@ -164,11 +176,22 @@ class ContactJacobian():
 
     def NominalTorque(self):
         transpose_wheel = np.transpose(self.Jcw)
-        self.wheel_angular_acceleration = [[6*(np.pi**2)*((self.omega)**2)*np.cos(2*np.pi*self.omega*self.t.to_sec())], [0], [0]]#given before equation 29 #assuming wheel trajectory angle is theta since it's wheel 0
-        self.angular_vel_wheel= [[3*np.pi*self.omega*np.sin(2*np.pi*self.omega*self.t.to_sec())], [0], [0]]
+        self.wheel_angular_acceleration = [[6*(np.pi**2)*((self.omega)**2)*np.cos(2*np.pi*self.omega*self.t)], [0], [0]]#given before equation 29 #assuming wheel trajectory angle is theta since it's wheel 0
+        self.angular_vel_wheel= [[3*np.pi*self.omega*np.sin(2*np.pi*self.omega*self.t)], [0], [0]]
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.matmul(np.linalg.inv(self.Jcwdot), self.wheel_angular_velocity) #equation 29
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
-        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheel) #FOR THE LOVE OF GOD CHANGE THIS SHIT PLEASE I CANNOT FORGET IT AGAIN
+        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheel) 
+
+        rospy.logwarn(f"self.omega: {self.omega}")
+        rospy.logwarn(f"self.wheel_angular_acceleration: {self.wheel_angular_acceleration}")
+        rospy.logwarn(f"self.angular_vel_wheel: {self.angular_vel_wheel}")
+        rospy.logwarn(f"self.acceleration: {self.acceleration}")
+
+
+
+
+
+
         self.TNom = np.linalg.inv(transpose_wheel)*(self.M*self.acceleration+self.Br) + self.Ir*self.wheel_angular_acceleration #THIS LINE IS NOT NEEDED
     
     def torque_no_fext(self):
@@ -254,9 +277,10 @@ class ContactJacobian():
             if s >= 0 and s <= 1:
             
                 x = edge_start[0] + s * (edge_end[0] - edge_start[0])
-                y = edge_start[1] + s * (edge_end[1] - edge_start[0])
+                y = edge_start[1] + s * (edge_end[1] - edge_start[1])
                 edge_flag[edge_count] = True
                 intersections.append((x, y))
+
         if Fext[0] == 0 and Fext[1] == 0:
             rospy.loginfo("No intersection")
         #The stuff for first contact point    
@@ -396,10 +420,12 @@ class ContactJacobian():
 
 
 def main():
+    rospy.init_node("Contact_Jacobian", anonymous=True)
+
     rr = 1  # roller radius
     rw = 1  # wheel radius
-    R = 1
-    BotMass = 1.5
+    R = 3.4175
+    BotMass = 41.6 #urdf mass
     RollerMass = 0
     Br = 0.2  # roller damping, Nm
     Iw = 1    # wheel inertia
@@ -410,13 +436,13 @@ def main():
     ExternalTorque = ContactJacobian(R, rw, rr, BotMass, Br, Iw, Ir, Ib, TractionTorque)
     
     # Wait until self.theta is set by the callback.
-    rate = rospy.Rate(10)  # 10 Hz
-    while ExternalTorque.theta is None and not rospy.is_shutdown():
-        rospy.logwarn("Waiting for theta to be set...")
-        rate.sleep()
+    #rate = rospy.Rate(10)  # 10 Hz
+    # while ExternalTorque.theta is None and not rospy.is_shutdown():
+    #     rospy.logwarn("Waiting for theta to be set...")
+    #     rate.sleep()
     
-    output_nominal = ExternalTorque.external_forces()
-    print(f"position of external force: {output_nominal}")    
+    #output_nominal = ExternalTorque.external_forces()
+    #rint(f"position of external force: {output_nominal}")    
     rospy.spin()
 
 if __name__ == "__main__":
