@@ -208,8 +208,8 @@
   <link name="wheel_cover_${id}">
     <inertial>
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="0.05"/>
-      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+      <mass value="0.1"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
     </inertial>
     <visual>
       <!-- The cylinder represents the bar cover. Its radius matches the roll cage (0.3) -->
@@ -371,7 +371,8 @@
         <namespace>/trikey_light</namespace>
         <remapping>~/ft : ft_sensor_1</remapping>
       </ros>
-      <update_rate>100</update_rate>
+      <always_on>true</always_on>
+      <update_rate>1000</update_rate>
             <frame>child</frame>
             <measure_direction>child_to_parent</measure_direction>
       <bodyName>wheel_link_1</bodyName>
@@ -386,6 +387,7 @@
         <namespace>/trikey_light</namespace>
         <remapping>~/ft : ft_sensor_2</remapping>
       </ros>
+      <always_on>true</always_on>
       <update_rate>1000</update_rate>
       <frame>child</frame>
                   <measure_direction>child_to_parent</measure_direction>
@@ -401,7 +403,8 @@
         <namespace>/trikey_light</namespace>
         <remapping>~/ft : ft_sensor_3</remapping>
       </ros>
-      <update_rate>100</update_rate>
+      <always_on>true</always_on>
+      <update_rate>1000</update_rate>
             <frame>child</frame>
             <measure_direction>child_to_parent</measure_direction>
       <bodyName>wheel_link_3</bodyName>

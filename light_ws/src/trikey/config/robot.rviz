@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /TF1
       Splitter Ratio: 0.5
     Tree Height: 549
   - Class: rviz/Selection
@@ -61,16 +62,72 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        shaft_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        wheel_link:
+        body_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rollcage_12:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rollcage_23:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rollcage_31:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        shaft_link_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        shaft_link_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        shaft_link_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_cover_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_cover_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_cover_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_link_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_link_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_link_3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -81,11 +138,87 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Class: rviz/TF
+      Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        base_link:
+          Value: true
+        body_link:
+          Value: true
+        rollcage_12:
+          Value: true
+        rollcage_23:
+          Value: true
+        rollcage_31:
+          Value: true
+        shaft_link_1:
+          Value: true
+        shaft_link_2:
+          Value: true
+        shaft_link_3:
+          Value: true
+        wheel_cover_1:
+          Value: true
+        wheel_cover_2:
+          Value: true
+        wheel_cover_3:
+          Value: true
+        wheel_link_1:
+          Value: true
+        wheel_link_2:
+          Value: true
+        wheel_link_3:
+          Value: true
+      Marker Alpha: 1
+      Marker Scale: 6
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        base_link:
+          body_link:
+            {}
+          rollcage_12:
+            {}
+          rollcage_23:
+            {}
+          rollcage_31:
+            {}
+          shaft_link_1:
+            wheel_link_1:
+              {}
+          shaft_link_2:
+            wheel_link_2:
+              {}
+          shaft_link_3:
+            wheel_link_3:
+              {}
+          wheel_cover_1:
+            {}
+          wheel_cover_2:
+            {}
+          wheel_cover_3:
+            {}
+      Update Interval: 0
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /external_force
+      Name: Marker
+      Namespaces:
+        external_force: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: base_footprint
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -109,7 +242,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 10
+      Distance: 10.194767951965332
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -117,17 +250,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -0.6482357978820801
+        Y: 0.5722953081130981
+        Z: 2.081594467163086
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.785398006439209
+      Pitch: 1.0597970485687256
       Target Frame: <Fixed Frame>
-      Yaw: 0.785398006439209
+      Yaw: 0.13357694447040558
     Saved: ~
 Window Geometry:
   Displays:
@@ -145,5 +278,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 72
-  Y: 27
+  X: 562
+  Y: 154
