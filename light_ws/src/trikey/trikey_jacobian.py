@@ -182,15 +182,7 @@ class ContactJacobian():
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
         self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheel) 
 
-        rospy.logwarn(f"self.omega: {self.omega}")
-        rospy.logwarn(f"self.wheel_angular_acceleration: {self.wheel_angular_acceleration}")
-        rospy.logwarn(f"self.angular_vel_wheel: {self.angular_vel_wheel}")
         rospy.logwarn(f"self.acceleration: {self.acceleration}")
-
-
-
-
-
 
         self.TNom = np.linalg.inv(transpose_wheel)*(self.M*self.acceleration+self.Br) + self.Ir*self.wheel_angular_acceleration #THIS LINE IS NOT NEEDED
     
@@ -201,7 +193,7 @@ class ContactJacobian():
     def external_forces(self): 
         self.NominalTorque()
         self.T_ext_not = self.torque_no_fext()
-       # rospy.loginfo(f"nominal toruqe:{self.T_ext_not}")
+        rospy.loginfo(f"nominal toruqe:{self.T_ext_not}")
         
       #  rospy.loginfo(f"Sensed Torque: {self.Ts}")
         RH_Matrix = np.matmul((np.transpose(self.Jcw)), self.T_ext_not - self.Ts) # self.Ts
@@ -238,8 +230,8 @@ class ContactJacobian():
         """ 
         Solves parametric parameter s separately for two lines that it intersects
         Finds the first intersection of the force vector
-        Need to transform the force vector to a local frame where the centroid of the robot body is (0,0)
-        *only rotational motion is considered
+            Need to transform the force vector to a local frame where the centroid of the robot body is (0,0)
+            *only rotational motion is considered
 
         Parameters: 
         self: instance of class
@@ -274,6 +266,7 @@ class ContactJacobian():
 
             # Parametric "s" for the edge
             s = ((Fext[0] * edge_start[1]) - (Fext[1] * edge_start[0])) / denom
+            rospy.logwarn(f"SSS: {s}")
             if s >= 0 and s <= 1:
             
                 x = edge_start[0] + s * (edge_end[0] - edge_start[0])
@@ -367,8 +360,8 @@ class ContactJacobian():
         arrow_length = 4.0
         # The arrow now starts at the tip and ends at the contact point
         start_point = Point(
-            x=contact_x + arrow_length * unit_Fx,
-            y=contact_y + arrow_length * unit_Fy,
+            x=(contact_x + arrow_length * unit_Fx),
+            y=(contact_y + arrow_length * unit_Fy),
             z=0.0
         )
         end_point = Point(x=contact_x, y=contact_y, z=0.0)
@@ -399,7 +392,7 @@ class ContactJacobian():
         self.marker.header.stamp = rospy.Time.now()
         self.marker.points = [start_point, end_point]
         self.pub.publish(self.marker)
-        rospy.loginfo("External force visualization complete.")
+        #rospy.loginfo("External force visualization complete.")
 
         
     # def visualize(self, output_nominal):
