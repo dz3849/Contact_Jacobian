@@ -32,6 +32,9 @@ class ContactJacobian():
         self.t = None
         self.t_now = None
         self.t_last=None
+        self.angular_vel_wheels = None
+        self.angular_vel_wheels_now = None
+        self.angular_vel_wheels_prev = None
 
         self.sub_body = rospy.Subscriber("/gazebo/model_states", ModelStates, callback = self.position_callback) 
         self.theta = None
@@ -39,8 +42,8 @@ class ContactJacobian():
         self.velocity = None
         self.omega = None
         rospy.Subscriber("/gazebo/model_states", Twist, callback = self.vel_callback) # this is a vector
-        self.base_angular_acceleration = None
         rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
+        rospy.Subscriber("/joint_states", JointState, callback = self.wheelcallback)
         #rospy.Subscriber("/clock", Time, self.time_callback)
 
         #create basic marker to visualize the external force
@@ -126,10 +129,11 @@ class ContactJacobian():
             robot_twist = data.twist[robot_index]
 
             self.velocity = [[robot_twist.linear.x], [robot_twist.linear.y], [robot_twist.angular.z]]
-            self.wheel_angular_velocity = np.matmul(self.Jcw, self.velocity)
-            self.roller_angular_velocity = np.matmul(self.Jcr, self.velocity)
+            # self.wheel_angular_velocity = np.matmul(self.Jcw, self.velocity)
+            # self.roller_angular_velocity = np.matmul(self.Jcr, self.velocity)
 
             self.omega =robot_twist.angular.z
+
             # rospy.loginfo(f"Robot velocity: {self.velocity}")
         except ValueError:
             rospy.logerr("Robot model 'trikey_light' not found in /gazebo/model_states")
@@ -164,7 +168,7 @@ class ContactJacobian():
         except ValueError:
             rospy.logerr(f"Robot trikey_light not found in model_states")
 
-    def torquecallback(self, data):   
+    def torquecallback(self, data):  
         try:
             self.Ts = data.position
             # rospy.loginfo(f"Instantaneous torque for the wheels: {self.Ts} Nm")
@@ -172,15 +176,27 @@ class ContactJacobian():
         except ValueError:
             rospy.logwarn(f"Joints maybe not found in JointState message")
 
-
+    def wheelcallback(self, data):
+        self.angular_vel_wheels = list(map(float, data.velocity))
+        if self.angular_vel_wheels_prev is None: 
+            self.angular_vel_wheels_prev = data.velocity
+            return
+        
+        self.angular_vel_wheels_now = data.velocity # float seconds
+        self.wheel_angular_acceleration = tuple(a - b for a, b in zip(self.angular_vel_wheels_now, self.angular_vel_wheels_prev))
+        self.wheel_angular_acceleration = list(map(float, self.wheel_angular_acceleration))
+        rospy.logwarn(self.angular_vel_wheels_now)
+        self.angular_vel_wheels_prev = self.angular_vel_wheels_now
 
     def NominalTorque(self):
         transpose_wheel = np.transpose(self.Jcw)
-        self.wheel_angular_acceleration = [[6*(np.pi**2)*((self.omega)**2)*np.cos(2*np.pi*self.omega*self.t)], [0], [0]]#given before equation 29 #assuming wheel trajectory angle is theta since it's wheel 0
-        self.angular_vel_wheel= [[3*np.pi*self.omega*np.sin(2*np.pi*self.omega*self.t)], [0], [0]]
+# subscribe to 
+
+        #self.wheel_angular_acceleration = [[6*(np.pi**2)*((self.omega)**2)*np.cos(2*np.pi*self.omega*self.t)], [0], [0]]#given before equation 29 #assuming wheel trajectory angle is theta since it's wheel 0
+        #self.angular_vel_wheel= [[3*np.pi*self.omega*np.sin(2*np.pi*self.omega*self.t)], [0], [0]]
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.matmul(np.linalg.inv(self.Jcwdot), self.wheel_angular_velocity) #equation 29
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
-        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheel) 
+        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheels) 
 
         rospy.logwarn(f"self.acceleration: {self.acceleration}")
 
@@ -202,6 +218,7 @@ class ContactJacobian():
         self.Fexty = RH_Matrix[1][0]
         Fext = [self.Fextx, self.Fexty]
         tf_Fext = self.vector_transform(Fext)
+        rospy.logwarn(f" transformed force: {tf_Fext}")
         #self.find_robot_vertices(self.theta)
         intersection = self.force_line_intersection(self.robot_vertices, tf_Fext)
         rospy.loginfo(f"Stats:{intersection[0]} {intersection[0]} {self.Fextx} {self.Fexty}")
@@ -244,7 +261,6 @@ class ContactJacobian():
 
         # Edges of the triangle
         edges = [(top_left, bottom_tip), (top_left, top_right), (bottom_tip, top_right)]
-
         intersections = [] #parametric parameter along the edge. s in order will be point one edge 1, 2, then 3
         edge_flag = [False, False, False]
         edge_count = -1
@@ -330,20 +346,20 @@ class ContactJacobian():
         cp_global = [x_n, y_n]
         return cp_global
 
-    # This shows where the vertices are in the global frame aka top view of the whole world
-    # No need to use this atm
-    def find_robot_vertices(self, theta, distances = [0.288925, 0.288925, 0.288925], angles = [0, 2/3*np.pi, 4/3*np.pi]):
-        index = 0
-        for d, phi in zip(distances, angles):
-            # Calculate the new coordinates with rotation
-            x = self.x + d * np.cos(phi + theta)
-            y = self.y + d * np.sin(phi + theta)
-            self.robot_vertices[index] = (x, y)
-            index += 1
+    # # This shows where the vertices are in the global frame aka top view of the whole world
+    # # No need to use this atm
+    # def find_robot_vertices(self, theta, distances = [0.288925, 0.288925, 0.288925], angles = [0, 2/3*np.pi, 4/3*np.pi]):
+    #     index = 0
+    #     for d, phi in zip(distances, angles):
+    #         # Calculate the new coordinates with rotation
+    #         x = self.x + d * np.cos(phi + theta)
+    #         y = self.y + d * np.sin(phi + theta)
+    #         self.robot_vertices[index] = (x, y)
+    #         index += 1
 
 
     def visualize(self, output_nominal):
-        rospy.loginfo("Visualizing external force...")
+        #rospy.loginfo("Visualizing external force...")
         contact_x, contact_y, Fextx, Fexty = output_nominal
 
         # Normalize the external force vector (keep the direction only)
