@@ -1,22 +1,29 @@
-trikey_light:
+trikey:
   joint_state_controller:
     type: joint_state_controller/JointStateController
     publish_rate: 100
 
+  wheel_joint_velocity_controller_0:
+    type: velocity_controllers/JointVelocityController
+    joint: wheel0_joint
+    command_topic: /wheel_joint_velocity_controller_0/command
+    pid: { p: 10.0, i: 0.0, d: 0.0 }
   wheel_joint_velocity_controller_1:
     type: velocity_controllers/JointVelocityController
-    joint: wheel_joint_1
+    # joint: wheel_joint_1
+    joint: wheel1_joint
     command_topic: /wheel_joint_velocity_controller_1/command
     pid: { p: 10.0, i: 0.0, d: 0.0 }
 
   wheel_joint_velocity_controller_2:
     type: velocity_controllers/JointVelocityController
-    joint: wheel_joint_2
+    # joint: wheel_joint_2
+    joint: wheel2_joint
     command_topic: /wheel_joint_velocity_controller_2/command
     pid: { p: 10.0, i: 0.0, d: 0.0 }
 
-  wheel_joint_velocity_controller_3:
-    type: velocity_controllers/JointVelocityController
-    joint: wheel_joint_3
-    command_topic: /wheel_joint_velocity_controller_3/command
-    pid: { p: 10.0, i: 0.0, d: 0.0 }
+  # wheel_joint_velocity_controller_3:
+  #   type: velocity_controllers/JointVelocityController
+  #   joint: wheel_joint_3
+  #   command_topic: /wheel_joint_velocity_controller_3/command
+  #   pid: { p: 10.0, i: 0.0, d: 0.0 }

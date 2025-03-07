@@ -136,7 +136,7 @@
       <parent link="shaft_link_${id}"/>
       <child link="wheel_link_${id}"/>
       <axis xyz="0.0 0.0 1.0"/>
-      <limit effort="300.0" velocity="10.0"/>
+      <limit effort="100000000.0" velocity="10.0"/>
     <provideFeedback>true</provideFeedback>
       <physics>
             <provideFeedback>true</provideFeedback>

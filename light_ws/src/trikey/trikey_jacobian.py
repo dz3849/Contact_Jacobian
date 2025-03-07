@@ -9,6 +9,7 @@ from sensor_msgs.msg import JointState
 from tf.transformations import euler_from_quaternion
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
+from std_msgs.msg import Float64
 #Fix name space issue and i hopefully sdhould be good to go :(
 # and this error
 #[WARN] [1732923937.001813, 377.757000]: Controller Spawner couldn't find the expected controller_manager ROS interface.
@@ -40,7 +41,7 @@ class ContactJacobian():
         self.omega = None
         rospy.Subscriber("/gazebo/model_states", Twist, callback = self.vel_callback) # this is a vector
         self.base_angular_acceleration = None
-        rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
+        rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey/joint_states
         #rospy.Subscriber("/clock", Time, self.time_callback)
 
         #create basic marker to visualize the external force
@@ -67,6 +68,11 @@ class ContactJacobian():
         self.marker.color.g = 1.0
         self.marker.color.b = 1.0
 
+
+        # Angular Z acceleration of the base
+        self.acceleration_pub_x = rospy.Publisher("/trikey/base_angular_acceleration_x", Float64, queue_size=10)
+        self.acceleration_pub_y = rospy.Publisher("/trikey/base_angular_acceleration_y", Float64, queue_size=10)
+        self.acceleration_pub_z = rospy.Publisher("/trikey/base_angular_acceleration_z", Float64, queue_size=10)
 
         self.Ts = None
         self.x = None
@@ -114,14 +120,14 @@ class ContactJacobian():
         self.visualize(output_nominal)
 
     def position_callback(self, data):
-       robot_index = data.name.index('trikey_light')
+       robot_index = data.name.index('trikey')
        robot_pose = data.pose[robot_index].orientation
        self.x = robot_pose.x
        self.y = robot_pose.y
        
     def vel_callback(self, data):
         try:
-            robot_index = data.name.index('trikey_light')
+            robot_index = data.name.index('trikey')
             
             robot_twist = data.twist[robot_index]
 
@@ -132,13 +138,13 @@ class ContactJacobian():
             self.omega =robot_twist.angular.z
             # rospy.loginfo(f"Robot velocity: {self.velocity}")
         except ValueError:
-            rospy.logerr("Robot model 'trikey_light' not found in /gazebo/model_states")
+            rospy.logerr("Robot model 'trikey' not found in /gazebo/model_states")
         except Exception as e:
             rospy.logerr(f"Error in vel_callback: {str(e)}")
 
     def thetacallback(self, data):
         try:
-            robot_index = data.name.index('trikey_light')
+            robot_index = data.name.index('trikey')
             
             # Extract the quaternion from the pose
             quaternion = data.pose[robot_index].orientation
@@ -162,7 +168,7 @@ class ContactJacobian():
             #rospy.loginfo (f"inverse jacobian {self.Jcwdot_inv}")
             #rospy.loginfo(f"Robot yaw angle: {self.theta} radians")
         except ValueError:
-            rospy.logerr(f"Robot trikey_light not found in model_states")
+            rospy.logerr(f"Robot trikey not found in model_states")
 
     def torquecallback(self, data):   
         try:
@@ -180,8 +186,16 @@ class ContactJacobian():
         self.angular_vel_wheel= [[3*np.pi*self.omega*np.sin(2*np.pi*self.omega*self.t)], [0], [0]]
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.matmul(np.linalg.inv(self.Jcwdot), self.wheel_angular_velocity) #equation 29
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
-        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheel) 
 
+
+        
+        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheel) 
+        self.acceleration_pub_x.publish(self.acceleration[0][0])
+        self.acceleration_pub_y.publish(self.acceleration[1][0])
+        self.acceleration_pub_z.publish(self.acceleration[2][0])
+
+        rospy.logwarn(f"self.Jcw: {self.Jcw}")
+        rospy.logwarn(f"self.Jcwdot: {self.Jcwdot}")
         rospy.logwarn(f"self.omega: {self.omega}")
         rospy.logwarn(f"self.wheel_angular_acceleration: {self.wheel_angular_acceleration}")
         rospy.logwarn(f"self.angular_vel_wheel: {self.angular_vel_wheel}")

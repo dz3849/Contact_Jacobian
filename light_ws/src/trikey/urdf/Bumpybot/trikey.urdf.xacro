@@ -1,0 +1,481 @@
+<?xml version="1.0" ?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="trikey">
+  <link name="base_link"/>
+
+  <joint name="body_joint" type="fixed">
+    <origin rpy="0 0 -0.523" xyz="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="body_link"/>
+  </joint>
+
+  <link name="body_link">
+    <visual>
+      <origin rpy="-1.11735e-06 1.93532e-06 2.69365e-06" xyz="0.007652 0.00490494 0.000231732"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/motors_base.stl"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-1.11735e-06 1.93532e-06 2.69365e-06" xyz="0.007652 0.00490494 0.000231732"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/motors_base.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.00765321 0.00490866 -0.0357164"/>
+      <mass value="18.8276"/>
+      <inertia ixx="0.303414" ixy="1.3598e-09" ixz="-5.01901e-07" iyy="0.303414" iyz="-2.9214e-07" izz="0.562153"/>
+    </inertial>
+  </link>
+
+
+<xacro:macro name="omni_roller" params="
+  roller_id
+  parent_link
+  joint_origin_xyz
+  joint_origin_rpy
+  vis_origin_xyz
+  vis_origin_rpy
+  coll_origin_xyz
+  coll_origin_rpy
+">
+
+  <!-- The link for the roller -->
+  <link name="roller8x750_${roller_id}">
+    <visual>
+      <origin xyz="${vis_origin_xyz}" rpy="${vis_origin_rpy}"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/roller8x750.stl"/>
+      </geometry>
+    </visual>
+        <surface>
+        <friction>
+          <ode>
+            <mu>0.9</mu>
+            <mu2>0.9</mu2>
+          </ode>
+        </friction>
+      </surface>
+    <collision>
+      <origin xyz="${coll_origin_xyz}" rpy="${coll_origin_rpy}"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/roller8x750.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.005"/>
+      <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.003" iyz="0" izz="0.003"/>
+    </inertial>
+  </link>
+
+  <!-- The joint connecting the roller to the parent link (the wheel) -->
+  <joint name="roller_w${roller_id}" type="continuous">
+    <origin xyz="${joint_origin_xyz}" rpy="${joint_origin_rpy}"/>
+    <parent link="${parent_link}"/>
+    <child link="roller8x750_${roller_id}"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="20"/>
+    <dynamics damping="0.02" friction="0.0"/>
+  </joint>
+
+</xacro:macro>
+
+<xacro:macro name="apply_rollers_to_wheel" params="wheel_label wheel_link">
+        <!-- 
+          Calls the omni_roller macro 18 times. 
+          The only differences between calls are 
+          1) the roller_id, and 
+          2) the XYZ/RPY transforms for that roller’s joint and the roller’s visuals/collision.
+          Everything else can be identical because all rollers on a single wheel share the same shape, mass, etc.
+        -->
+
+  <!-- roller0 -->
+  <xacro:omni_roller  roller_id="${wheel_label}_0" parent_link="${wheel_link}" 
+  joint_origin_xyz="0.0835653 -0.0394107 0" joint_origin_rpy="-1.5708 1.57079 -0.523599"
+  vis_origin_xyz="2.77556e-17 0 -0.0076581" vis_origin_rpy="-1.5708 -1.5708 0" 
+  coll_origin_xyz="2.77556e-17 0 -0.0076581" coll_origin_rpy="-1.5708 -1.5708 0"/>
+
+  <!-- roller1 -->
+  <xacro:omni_roller  roller_id="${wheel_label}_1" parent_link="${wheel_link}"
+  joint_origin_xyz="0.0665785 -0.0643294 0" joint_origin_rpy="-0.698132 1.5708 0" 
+  vis_origin_xyz="2.77556e-17 0 -0.00924552" vis_origin_rpy="-1.5708 -1.5708 0" 
+  coll_origin_xyz="2.77556e-17 0 -0.00924552" coll_origin_rpy="-1.5708 -1.5708 0"/>
+
+  <!-- roller2 -->
+  <xacro:omni_roller roller_id="${wheel_label}_2" parent_link="${wheel_link}" 
+  vis_origin_rpy="-1.5708 -1.5708 0"  vis_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"  
+  coll_origin_rpy="-1.5708 -1.5708 0"  coll_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558" 
+  joint_origin_rpy="-0.349066 1.5708 0"  joint_origin_xyz="0.0405614 -0.083221 0"/>
+    
+  <!-- roller3 -->
+  <xacro:omni_roller roller_id="${wheel_label}_3" parent_link="${wheel_link}"
+  vis_origin_rpy="-1.5708 -1.5708 0"  vis_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  coll_origin_rpy="-1.5708 -1.5708 0"  coll_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  joint_origin_rpy="1.5708 1.5708 1.5708"  joint_origin_xyz="0.009652 -0.092075 0"/>
+
+
+  <!-- roller4 -->
+  <xacro:omni_roller roller_id="${wheel_label}_4" parent_link="${wheel_link}"
+  vis_origin_rpy="-1.5708 -1.5708 0"  vis_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  coll_origin_rpy="-1.5708 -1.5708 0"  coll_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  joint_origin_rpy="1.5708 1.57079 1.22173"  joint_origin_xyz="-0.0224216 -0.0898234 0.0"/>
+
+  <!-- roller5 -->
+  <xacro:omni_roller roller_id="${wheel_label}_5" parent_link="${wheel_link}"
+  vis_origin_rpy="-1.5708 -1.5708 0"  vis_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  coll_origin_rpy="-1.5708 -1.5708 0"  coll_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  joint_origin_rpy="1.5708 1.57079 0.872665"  joint_origin_xyz="-0.0517908 -0.0767377 0.0"/>
+
+    
+  <!-- roller6 -->
+  <xacro:omni_roller roller_id="${wheel_label}_6" parent_link="${wheel_link}"
+  vis_origin_rpy="1.5708 1.5708 0"  vis_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  coll_origin_rpy="1.5708 1.5708 0"  coll_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  joint_origin_rpy="1.5708 1.57079 0.523599"  joint_origin_xyz="-0.0749133 -0.0543964 0.0"/>
+
+  <!-- roller7 -->
+  <xacro:omni_roller roller_id="${wheel_label}_7" parent_link="${wheel_link}"
+  vis_origin_rpy="1.5708 1.5708 0"  vis_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  coll_origin_rpy="1.5708 1.5708 0"  coll_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  joint_origin_rpy="1.5708 1.57079 0.174533"  joint_origin_xyz="-0.0890001 -0.025494 0.0"/>
+
+  <!-- roller8 -->
+  <xacro:omni_roller roller_id="${wheel_label}_8" parent_link="${wheel_link}"
+  vis_origin_rpy="1.5708 1.5708 0"  vis_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  coll_origin_rpy="1.5708 1.5708 0"  coll_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  joint_origin_rpy="1.5708 1.57079 -0.174533"  joint_origin_xyz="-0.0923522 0.00648329 0.0"/>
+
+  <!-- roller9 -->
+  <xacro:omni_roller roller_id="${wheel_label}_9" parent_link="${wheel_link}"
+  vis_origin_rpy="1.5708 1.5708 0"  vis_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  coll_origin_rpy="1.5708 1.5708 0"  coll_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  joint_origin_rpy="1.5708 1.57079 -0.523599"  joint_origin_xyz="-0.0845653 0.0376786 0.0"/>
+
+    
+  <!-- roller10 -->
+  <xacro:omni_roller roller_id="${wheel_label}_10" parent_link="${wheel_link}"
+  vis_origin_rpy="1.5708 1.5708 0"  vis_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  coll_origin_rpy="1.5708 1.5708 0"  coll_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  joint_origin_rpy="2.44346 1.5708 0"  joint_origin_xyz="-0.0665785 0.0643294 0.0"/>
+
+
+  <!-- roller11 -->
+  <xacro:omni_roller roller_id="${wheel_label}_11" parent_link="${wheel_link}"
+  vis_origin_rpy="1.5708 1.5708 0"  vis_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  coll_origin_rpy="1.5708 1.5708 0"  coll_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  joint_origin_rpy="2.79253 1.5708 0"  joint_origin_xyz="-0.0405614 0.083221 0.0"/>
+
+    
+  <!-- roller12 -->
+  <xacro:omni_roller roller_id="${wheel_label}_12" parent_link="${wheel_link}"
+  vis_origin_rpy="-1.5708 -1.5708 0"  vis_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  coll_origin_rpy="-1.5708 -1.5708 0"  coll_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  joint_origin_rpy="-1.5708 1.5708 1.5708"  joint_origin_xyz="-0.009652 0.092075 0.0"/>
+
+
+  <!-- roller13 -->
+  <xacro:omni_roller roller_id="${wheel_label}_13" parent_link="${wheel_link}"
+  vis_origin_rpy="-1.5708 -1.5708 0"  vis_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  coll_origin_rpy="-1.5708 -1.5708 0"  coll_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  joint_origin_rpy="-1.5708 1.57079 1.22173"  joint_origin_xyz="0.0224216 0.0898234 0.0"/>
+
+
+  <!-- roller14 -->
+  <xacro:omni_roller roller_id="${wheel_label}_14" parent_link="${wheel_link}"
+  vis_origin_rpy="-1.5708 -1.5708 0"  vis_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  coll_origin_rpy="-1.5708 -1.5708 0"  coll_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  joint_origin_rpy="-1.5708 1.57079 0.872665"  joint_origin_xyz="0.0517908 0.0767377 0.0"/>
+
+
+  <!-- roller15 -->
+  <xacro:omni_roller roller_id="${wheel_label}_15" parent_link="${wheel_link}"
+  vis_origin_rpy="-1.5708 -1.5708 0"  vis_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  coll_origin_rpy="-1.5708 -1.5708 0"  coll_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  joint_origin_rpy="-1.5708 1.57079 0.523599"  joint_origin_xyz="0.0749133 0.0543964 0.0"/>
+
+
+  <!-- roller16 -->
+  <xacro:omni_roller roller_id="${wheel_label}_16" parent_link="${wheel_link}"
+  vis_origin_rpy="-1.5708 -1.5708 0"  vis_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  coll_origin_rpy="-1.5708 -1.5708 0"  coll_origin_xyz="-8.72708e-09 -2.00071e-09 -0.00924558"
+  joint_origin_rpy="-1.5708 1.57079 0.174533"  joint_origin_xyz="0.0890001 0.025494 0.0"/>
+
+
+  <!-- roller17 -->
+  <xacro:omni_roller roller_id="${wheel_label}_17" parent_link="${wheel_link}"
+  vis_origin_rpy="1.5708 1.5708 0"  vis_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  coll_origin_rpy="1.5708 1.5708 0"  coll_origin_xyz="8.72708e-09 2.00071e-09 -0.00924558"
+  joint_origin_rpy="1.5708 1.57079 -0.174533"  joint_origin_xyz="0.0890001 -0.025494 0.0"/>
+</xacro:macro>  
+
+
+
+
+
+  <link name="wheel0">
+    <visual>
+      <origin rpy="-1.5708 1.4944e-22 -1.48983e-28" xyz="0.0157175 -0.000676884 -0.0110091"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/wheel.stl"/>
+      </geometry>
+    </visual>
+    <!-- <collision>
+      <origin rpy="-1.5708 1.4944e-22 -1.48983e-28" xyz="0.0157175 -0.000676884 -0.00283407"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/wheel.stl"/>
+      </geometry>
+    </collision> -->
+    <inertial>
+      <origin rpy="0 0 0" xyz="-3.2877e-05 -5.91764e-05 -0.0112478"/>
+      <mass value="2.36069"/>
+      <inertia ixx="0.00466517" ixy="9.17346e-07" ixz="2.34275e-06" iyy="0.00466772" iyz="-4.20658e-06" izz="0.00786801"/>
+    </inertial>
+  </link>
+
+  <joint name="wheel0_joint" type="continuous">
+    <origin rpy="-1.5708 -1.50485e-12 1.0472" xyz="-0.212654 0.132125 -0.130854"/>
+    <parent link="body_link"/>
+    <child link="wheel0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="30" velocity="20"/>
+    <dynamics damping="0.0" friction="0.2"/>
+    <provideFeedback>true</provideFeedback>
+      <physics>
+            <provideFeedback>true</provideFeedback>
+        </physics>
+      <gazebo>
+            <physics>
+            <provideFeedback>true</provideFeedback>
+            </physics>
+            <provideFeedback>true</provideFeedback>
+        <sensor type="force_torque" name="ft_sensor_wheel_0">
+          <always_on>true</always_on>
+          <update_rate>1000</update_rate>
+          <force_torque>
+            <frame>child</frame>
+                        <measure_direction>child_to_parent</measure_direction>
+          </force_torque>
+        </sensor>
+      </gazebo>
+  </joint>
+
+
+  
+  <link name="wheel1">
+    <visual>
+      <origin rpy="-1.5708 -7.59903e-17 5.39519e-23" xyz="0.0157175 -0.000676884 -0.0110091"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/wheel.stl"/>
+      </geometry>
+
+    </visual>
+    <!-- <collision>
+      <origin rpy="-1.5708 -7.59903e-17 5.39519e-23" xyz="0.0157175 -0.000676884 -0.0110091"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/wheel.stl"/>
+      </geometry>
+
+    </collision>  -->
+    <inertial>
+      <origin rpy="0 0 0" xyz="-3.2877e-05 -5.91764e-05 -0.0194228"/>
+      <mass value="2.36069"/>
+      <inertia ixx="0.00466517" ixy="9.17346e-07" ixz="2.34275e-06" iyy="0.00466772" iyz="-4.20658e-06" izz="0.00786801"/>
+    </inertial>
+  </link>
+  
+  <joint name="wheel1_joint" type="continuous">
+    <origin rpy="1.5708 1.50474e-12 2.69365e-06" xyz="0.0076339 -0.242491 -0.130854"/>
+    <parent link="body_link"/>
+    <child link="wheel1"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="30" velocity="20"/>
+        <dynamics damping="0.0" friction="0.2"/>
+
+    <provideFeedback>true</provideFeedback>
+      <physics>
+            <provideFeedback>true</provideFeedback>
+        </physics>
+      <gazebo>
+            <physics>
+            <provideFeedback>true</provideFeedback>
+            </physics>
+            <provideFeedback>true</provideFeedback>
+        <sensor type="force_torque" name="ft_sensor_wheel_1">
+          <always_on>true</always_on>
+          <update_rate>1000</update_rate>
+          <force_torque>
+            <frame>child</frame>
+                        <measure_direction>child_to_parent</measure_direction>
+          </force_torque>
+        </sensor>
+      </gazebo>
+  </joint>
+
+  
+  <link name="wheel2">
+    <visual>
+      <origin rpy="-1.5708 1.21101e-16 3.64923e-22" xyz="0.0157175 -0.000676884 -0.0110091"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/wheel.stl"/>
+      </geometry>
+
+    </visual>
+    <!-- <collision>
+      <origin rpy="-1.5708 1.21101e-16 3.64923e-22" xyz="0.0157175 -0.000676884 -0.0110091"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/wheel.stl"/>
+      </geometry>
+
+    </collision> -->
+    <inertial>
+      <origin rpy="0 0 0" xyz="-3.2877e-05 -5.91764e-05 -0.0194228"/>
+      <mass value="2.36069"/>
+      <inertia ixx="0.00466517" ixy="9.17346e-07" ixz="2.34275e-06" iyy="0.00466772" iyz="-4.20658e-06" izz="0.00786801"/>
+    </inertial>
+  </link>
+  
+  <joint name="wheel2_joint" type="continuous">
+    <origin rpy="-1.5708 -3.25141e-07 -1.04719" xyz="0.227979 0.132092 -0.130855"/>
+    <parent link="body_link"/>
+    <child link="wheel2"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="30" velocity="20"/>
+    <dynamics damping="0.0" friction="0.2"/>
+    <provideFeedback>true</provideFeedback>
+      <physics>
+            <provideFeedback>true</provideFeedback>
+        </physics>
+      <gazebo>
+            <physics>
+            <provideFeedback>true</provideFeedback>
+            </physics>
+            <provideFeedback>true</provideFeedback>
+        <sensor type="force_torque" name="ft_sensor_wheel_2">
+          <always_on>true</always_on>
+          <update_rate>1000</update_rate>
+          <force_torque>
+            <frame>child</frame>
+                        <measure_direction>child_to_parent</measure_direction>
+          </force_torque>
+        </sensor>
+      </gazebo>
+  </joint>
+  
+
+
+<!-- Creates all 18 rollers for wheel0 -->
+<xacro:apply_rollers_to_wheel
+  wheel_label="0"
+  wheel_link="wheel0"
+/>
+<!-- Creates all 18 rollers for wheel1 -->
+<xacro:apply_rollers_to_wheel
+  wheel_label="1"
+  wheel_link="wheel1"
+/>
+<!-- Creates all 18 rollers for wheel2 -->
+<xacro:apply_rollers_to_wheel
+  wheel_label="2"
+  wheel_link="wheel2"
+/>
+
+<gazebo>
+  <!-- This plugin exposes your URDF joints to ros_control. -->
+  <provideFeedback>true</provideFeedback>
+  <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+    <robotNamespace>/trikey</robotNamespace>
+  </plugin>
+
+    <!-- FT sensor plugin for wheel 0 -->
+    <plugin name="ft_sensor_plugin_0" filename="libgazebo_ros_ft_sensor.so">
+      <ros>
+        <namespace>/trikey</namespace>
+        <remapping>~/ft : ft_sensor_0</remapping>
+      </ros>
+      <always_on>true</always_on>
+      <update_rate>1000</update_rate>
+            <frame>child</frame>
+            <measure_direction>child_to_parent</measure_direction>
+      <bodyName>wheel_0</bodyName>
+      <jointName>wheel0_joint</jointName>
+      <sensorName>ft_sensor_wheel_3</sensorName>
+      <topicName>ft_sensor_0_topic</topicName>
+    </plugin>
+    <!-- FT sensor plugin for wheel 1 -->
+    <plugin name="ft_sensor_plugin_1" filename="libgazebo_ros_ft_sensor.so">
+      <ros>
+        <namespace>/trikey</namespace>
+        <remapping>~/ft : ft_sensor_1</remapping>
+      </ros>
+      <always_on>true</always_on>
+      <update_rate>1000</update_rate>
+            <frame>child</frame>
+            <measure_direction>child_to_parent</measure_direction>
+      <bodyName>wheel_1</bodyName>
+      <jointName>wheel1_joint</jointName>
+      <sensorName>ft_sensor_wheel_1</sensorName>
+      <topicName>ft_sensor_1_topic</topicName>
+    </plugin>
+
+    <!-- FT sensor plugin for wheel 2 -->
+    <plugin name="ft_sensor_plugin_2" filename="libgazebo_ros_ft_sensor.so">
+      <ros>
+        <namespace>/trikey</namespace>
+        <remapping>~/ft : ft_sensor_2</remapping>
+      </ros>
+      <always_on>true</always_on>
+      <update_rate>1000</update_rate>
+      <frame>child</frame>
+                  <measure_direction>child_to_parent</measure_direction>
+      <bodyName>wheel_2</bodyName>
+      <jointName>wheel2_joint</jointName>
+      <sensorName>ft_sensor_wheel_2</sensorName>
+      <topicName>ft_sensor_2_topic</topicName>
+    </plugin>
+</gazebo>
+
+<transmission name="trans_wheel0">
+  <type>transmission_interface/SimpleTransmission</type>
+  <joint name="wheel0_joint">
+    <!-- Or hardware_interface/EffortJointInterface if you prefer effort control -->
+    <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+  </joint>
+  <actuator name="wheel0_motor">
+    <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+  </actuator>
+</transmission>
+    <gazebo reference="wheel0_joint">
+        <provideFeedback>true</provideFeedback>
+    </gazebo>
+
+<transmission name="trans_wheel1">
+  <type>transmission_interface/SimpleTransmission</type>
+  <joint name="wheel1_joint">
+    <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+  </joint>
+  <actuator name="wheel1_motor">
+    <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+  </actuator>
+</transmission>
+    <gazebo reference="wheel1_joint">
+        <provideFeedback>true</provideFeedback>
+    </gazebo>
+<transmission name="trans_wheel2">
+  <type>transmission_interface/SimpleTransmission</type>
+  <joint name="wheel2_joint">
+    <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+  </joint>
+  <actuator name="wheel2_motor">
+    <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+  </actuator>
+</transmission>
+    <gazebo reference="wheel2_joint">
+        <provideFeedback>true</provideFeedback>
+    </gazebo>
+  
+</robot>
