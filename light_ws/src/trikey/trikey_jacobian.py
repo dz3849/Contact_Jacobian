@@ -33,6 +33,9 @@ class ContactJacobian():
         self.t = None
         self.t_now = None
         self.t_last=None
+        self.angular_vel_wheels = None
+        self.angular_vel_wheels_now = None
+        self.angular_vel_wheels_prev = None
 
         self.sub_body = rospy.Subscriber("/gazebo/model_states", ModelStates, callback = self.position_callback) 
         self.theta = None
@@ -40,10 +43,8 @@ class ContactJacobian():
         self.velocity = None
         self.omega = None
         rospy.Subscriber("/gazebo/model_states", Twist, callback = self.vel_callback) # this is a vector
-        self.base_angular_acceleration = None
-        rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey/joint_states
-        #rospy.Subscriber("/clock", Time, self.time_callback)
-
+        rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
+        rospy.Subscriber("/joint_states", JointState, callback = self.wheelcallback)
         #create basic marker to visualize the external force
         self.pub = rospy.Publisher("external_force", Marker, queue_size=10)
         self.marker = Marker() 
