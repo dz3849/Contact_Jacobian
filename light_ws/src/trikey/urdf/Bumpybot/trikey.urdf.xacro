@@ -9,6 +9,36 @@
     <child link="body_link"/>
   </joint>
 
+  <link name="exterior">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="20"/>
+       <inertia ixx="1.13" ixy="0" ixz="0" iyy="1.13" iyz="0" izz="1.13"/> <!--0.5649801*m-->
+    </inertial>
+    <visual name="">
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.5708"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/bumpybot_exterior.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="">
+        <color rgba="1.0 0.0 0.0 1.0"/>
+        <texture filename=""/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.5708"/>
+      <geometry>
+        <mesh filename="package://trikey/urdf/Bumpybot/meshes/bumpybot_exterior.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="exterior_joint" type="fixed">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <parent link="base_link"/>
+    <child link="exterior"/>
+  </joint>
+
   <link name="body_link">
     <visual>
       <origin rpy="-1.11735e-06 1.93532e-06 2.69365e-06" xyz="0.007652 0.00490494 0.000231732"/>
