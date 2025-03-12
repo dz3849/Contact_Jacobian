@@ -179,18 +179,29 @@ class ContactJacobian():
         except ValueError:
             rospy.logwarn(f"Joints maybe not found in JointState message")
 
+    def wheelcallback(self, data):
+        self.angular_vel_wheels = list(map(float, data.velocity))
+        if self.angular_vel_wheels_prev is None: 
+            self.angular_vel_wheels_prev = data.velocity
+            return
+
+        self.angular_vel_wheels_now = data.velocity # float seconds
+        self.wheel_angular_acceleration = tuple(a - b for a, b in zip(self.angular_vel_wheels_now, self.angular_vel_wheels_prev))
+        self.wheel_angular_acceleration = list(map(float, self.wheel_angular_acceleration))
+        rospy.logwarn(self.angular_vel_wheels_now)
+        self.angular_vel_wheels_prev = self.angular_vel_wheels_now
 
 
     def NominalTorque(self):
         transpose_wheel = np.transpose(self.Jcw)
-        self.wheel_angular_acceleration = [[6*(np.pi**2)*((self.omega)**2)*np.cos(2*np.pi*self.omega*self.t)], [0], [0]]#given before equation 29 #assuming wheel trajectory angle is theta since it's wheel 0
-        self.angular_vel_wheel= [[3*np.pi*self.omega*np.sin(2*np.pi*self.omega*self.t)], [0], [0]]
+        #self.wheel_angular_acceleration = [[6*(np.pi**2)*((self.omega)**2)*np.cos(2*np.pi*self.omega*self.t)], [0], [0]]#given before equation 29 #assuming wheel trajectory angle is theta since it's wheel 0
+        #self.angular_vel_wheel= [[3*np.pi*self.omega*np.sin(2*np.pi*self.omega*self.t)], [0], [0]]
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.matmul(np.linalg.inv(self.Jcwdot), self.wheel_angular_velocity) #equation 29
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
 
 
         
-        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheel) 
+        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheels) 
         self.acceleration_pub_x.publish(self.acceleration[0][0])
         self.acceleration_pub_y.publish(self.acceleration[1][0])
         self.acceleration_pub_z.publish(self.acceleration[2][0])
@@ -199,11 +210,8 @@ class ContactJacobian():
         rospy.logwarn(f"self.Jcwdot: {self.Jcwdot}")
         rospy.logwarn(f"self.omega: {self.omega}")
         rospy.logwarn(f"self.wheel_angular_acceleration: {self.wheel_angular_acceleration}")
-        rospy.logwarn(f"self.angular_vel_wheel: {self.angular_vel_wheel}")
+        rospy.logwarn(f"self.angular_vel_wheel: {self.angular_vel_wheels}")
         rospy.logwarn(f"self.acceleration: {self.acceleration}")
-
-
-
 
 
 
