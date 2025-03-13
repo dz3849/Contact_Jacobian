@@ -84,7 +84,7 @@ class ContactJacobian():
 
         # self.robot_vertices = [(2.4, 3.36),(-3.4175, 0),(2.4, -3.36)]
 
-        self.robot_vertices = [(2.4, 3.36),(-3.4175, 0),(2.4, -3.36)]
+        self.robot_vertices = [(0.221, -0.118),(0.000, 0.263),(-0.214, -0.115)]
 
         #Jacobian matrix for frame conversion all angles in radians
         
@@ -288,7 +288,6 @@ class ContactJacobian():
             # Calculate the denominator correctly
             denom = (Fext[1] * (edge_end[0] - edge_start[0])
                     - Fext[0] * (edge_end[1] - edge_start[1]))
-
         
 
             # Avoid division by zero if denom == 0
