@@ -2,7 +2,7 @@
 <launch>
 
     <env name="__NV_PRIME_RENDER_OFFLOAD" value="1"/> 
-    <env name="__GLX_VENDOR_LIBRARY_NAME" value="1"/>
+    <env name="__GLX_VENDOR_LIBRARY_NAME" value="nvidia"/>
     
     <param name="robot_description" command="xacro '$(find trikey)/urdf/Bumpybot/trikey.urdf.xacro'"/>
     <!-- <param name= "robot_description" textfile='$(find trikey)/urdf/trikey_light_new.urdf' /> -->
