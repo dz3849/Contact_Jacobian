@@ -61,8 +61,8 @@ class ContactJacobian():
         self.marker.pose.orientation.y = 0
         self.marker.pose.orientation.z = 0
         self.marker.pose.orientation.w = 1
-        self.marker.scale.x = 0.3
-        self.marker.scale.y = 0.3
+        self.marker.scale.x = 0.1
+        self.marker.scale.y = 0.1
         self.marker.scale.z = 0.1
         self.marker.color.a = 1.0
         self.marker.color.r = 0.0
@@ -181,6 +181,7 @@ class ContactJacobian():
 
     def wheelcallback(self, data):
         self.angular_vel_wheels = list(map(float, data.velocity))
+        self.angular_vel_wheels = [self.angular_vel_wheels[0], self.angular_vel_wheels[1], self.angular_vel_wheels[2]]
         if self.angular_vel_wheels_prev is None: 
             self.angular_vel_wheels_prev = data.velocity
             return
@@ -188,7 +189,7 @@ class ContactJacobian():
         self.angular_vel_wheels_now = data.velocity # float seconds
         self.wheel_angular_acceleration = tuple(a - b for a, b in zip(self.angular_vel_wheels_now, self.angular_vel_wheels_prev))
         self.wheel_angular_acceleration = list(map(float, self.wheel_angular_acceleration))
-        rospy.logwarn(self.angular_vel_wheels_now)
+        self.wheel_angular_acceleration = [self.wheel_angular_acceleration[0], self.wheel_angular_acceleration[1], self.wheel_angular_acceleration[2]]
         self.angular_vel_wheels_prev = self.angular_vel_wheels_now
 
 
@@ -200,20 +201,7 @@ class ContactJacobian():
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
 
 
-        
-        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheels) 
-        self.acceleration_pub_x.publish(self.acceleration[0][0])
-        self.acceleration_pub_y.publish(self.acceleration[1][0])
-        self.acceleration_pub_z.publish(self.acceleration[2][0])
-
-        rospy.logwarn(f"self.Jcw: {self.Jcw}")
-        rospy.logwarn(f"self.Jcwdot: {self.Jcwdot}")
-        rospy.logwarn(f"self.omega: {self.omega}")
-        rospy.logwarn(f"self.wheel_angular_acceleration: {self.wheel_angular_acceleration}")
-        rospy.logwarn(f"self.angular_vel_wheel: {self.angular_vel_wheels}")
-        rospy.logwarn(f"self.acceleration: {self.acceleration}")
-
-
+        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheels)       
 
         self.TNom = np.linalg.inv(transpose_wheel)*(self.M*self.acceleration+self.Br) + self.Ir*self.wheel_angular_acceleration #THIS LINE IS NOT NEEDED
     
@@ -251,8 +239,9 @@ class ContactJacobian():
         new_vector: The transformed force vector on the local frame
 
         """
-        x_n = np.cos(self.theta)*Fext[0] + np.sin(self.theta)* Fext[1]
-        y_n = -np.sin(self.theta)*Fext[0] + np.cos(self.theta)* Fext[1]
+        theta_adjusted = self.theta+np.pi/2
+        x_n = np.cos(theta_adjusted)*Fext[0] + np.sin(theta_adjusted)* Fext[1]
+        y_n = -np.sin(theta_adjusted)*Fext[0] + np.cos(theta_adjusted)* Fext[1]
         new_vector = [x_n, y_n]
         return new_vector
 
@@ -271,10 +260,10 @@ class ContactJacobian():
         Return:
         contact_point: The point where the external force first intersects the robot
         """
-        top_left, bottom_tip, top_right = robot_vertices[0], robot_vertices[1], robot_vertices[2]
+        top_left, tip, top_right = robot_vertices[0], robot_vertices[1], robot_vertices[2]
 
         # Edges of the triangle
-        edges = [(top_left, bottom_tip), (top_left, top_right), (bottom_tip, top_right)]
+        edges = [(top_left, tip), (top_left, top_right), (tip, top_right)]
 
         intersections = [] #parametric parameter along the edge. s in order will be point one edge 1, 2, then 3
         edge_flag = [False, False, False]
@@ -393,7 +382,7 @@ class ContactJacobian():
             y=contact_y + arrow_length * unit_Fy,
             z=0.0
         )
-        end_point = Point(x=contact_x, y=contact_y, z=0.0)
+        end_point = Point(x=contact_x, y=contact_y, z=1.0)
         scale = 0.1
         # start_point = Point(x=contact_x *-Fextx,  y=contact_y *-Fexty,z=0.0)
 
