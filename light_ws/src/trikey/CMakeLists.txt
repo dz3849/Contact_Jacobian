@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(trikey)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -10,12 +10,14 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
-  std_msgs
-  gazebo_ros
-  controller_manager
-  control_msgs
-  joint_state_controller
-  effort_controllers
+  tf2_ros
+  sensor_msgs
+  geometry_msgs
+  nav_msgs
+  tf
+  gazebo_msgs
+  visualization_msgs
+  dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
@@ -75,7 +77,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
 
 ################################################
@@ -92,11 +94,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * uncomment the "generate_dynamic_reconfigure_options" section below
 ##     and list every .cfg file to be processed
 
-## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
+# Generate dynamic reconfigure parameters in the 'cfg' folder
+generate_dynamic_reconfigure_options(
+  cfg/Jacobian.cfg
+  # cfg/DynReconf2.cfg
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -107,14 +109,11 @@ find_package(catkin REQUIRED COMPONENTS
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-find_package(gazebo REQUIRED)
 catkin_package(
-  #INCLUDE_DIRS include
-  LIBRARIES trikey
-  CATKIN_DEPENDS roscpp rospy std_msgs gazebo_ros
-  DEPENDS gazebo
-  # gazebo_INCLUDE_DIRS
-  # gazebo_INCLUDE_DIRS_LIBRARIES
+#  INCLUDE_DIRS include
+#  LIBRARIES bumpybot_torque_contact
+#  CATKIN_DEPENDS roscpp rospy
+#  DEPENDS system_lib
 )
 
 ###########
@@ -124,17 +123,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+# include
   ${catkin_INCLUDE_DIRS}
-  ${GAZEBO_INCLUDE_DIRS}
 )
-
-## Link Gazebo libraries
-link_directories(${GAZEBO_LIBRARY_DIRS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/trikey.cpp
+#   src/${PROJECT_NAME}/bumpybot_torque_contact.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -145,7 +140,7 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/trikey_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/bumpybot_torque_contact_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -165,25 +160,17 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 #############
 ## Install ##
 #############
-## Install configuration files (e.g., controller YAML)
-install(FILES
-  config/controller.yaml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
-)
 
-## Install launch files
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-)
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# catkin_install_python(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+catkin_install_python(PROGRAMS
+  scripts/trikey_jacobian.py
+  scripts/ForceSensorSim.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
@@ -218,7 +205,7 @@ install(DIRECTORY launch/
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_trikey.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_bumpybot_torque_contact.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
