@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+
 import numpy as np
 import rospy 
 from geometry_msgs.msg import Twist
@@ -14,18 +15,20 @@ from std_msgs.msg import Float64
 # and this error
 #[WARN] [1732923937.001813, 377.757000]: Controller Spawner couldn't find the expected controller_manager ROS interface.
 class ContactJacobian():
-    def __init__(self, R, rw, L, M, Br, Iw, Ir, Ib, TractionTorque):
+    def __init__(self, R, rw, L, M, Br, Iw, Ir, Ib, alpha, TractionTorque):
 
         self.R = R
         self.rw = rw #wheel radius
         self.rr = 1 #roller radius
-        self.M = M
-        self.Br = [[Br], [Br], [Br]]
+        self.M = [[M, 0, 0], [0, M, 0], [0, 0, Ib]]
+        self.Br = Br
         self.Iw = Iw
         self.Ir = Ir
         self.Ib = Ib
+        self.alpha = alpha
         self.TractionTorque = TractionTorque
         self.torque_values=[]
+        self.BrMatrix = None
         self.Jcw = None
         self.Jcwdot = None
         self.Jcr = None
@@ -36,6 +39,7 @@ class ContactJacobian():
         self.angular_vel_wheels = None
         self.angular_vel_wheels_now = None
         self.angular_vel_wheels_prev = None
+        self.roller_vel = None
 
         self.sub_body = rospy.Subscriber("/gazebo/model_states", ModelStates, callback = self.position_callback) 
         self.theta = None
@@ -200,13 +204,13 @@ class ContactJacobian():
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.matmul(np.linalg.inv(self.Jcwdot), self.wheel_angular_velocity) #equation 29
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
 
-
+        self.BrMatrix =  self.Br*np.tanh(self.alpha*self.roller_angular_velocity)
         self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheels)       
 
-        self.TNom = np.linalg.inv(transpose_wheel)*(self.M*self.acceleration+self.Br) + self.Ir*self.wheel_angular_acceleration #THIS LINE IS NOT NEEDED
+        #self.TNom = np.linalg.inv(transpose_wheel)*(self.M*self.acceleration+self.Br) + self.Ir*self.wheel_angular_acceleration #THIS LINE IS NOT NEEDED
     
     def torque_no_fext(self):
-        return np.matmul((np.transpose(self.Jcwinv)), (self.M*self.acceleration) + np.matmul(np.transpose(self.Jcr), self.Br))#equation 38 
+        return np.matmul((np.transpose(self.Jcwinv)), np.matmul(self.M, self.acceleration) + np.matmul(np.transpose(self.Jcr), self.BrMatrix))#equation 38 
             
     # need help on hte last row of equation 42
     def external_forces(self): 
@@ -441,10 +445,11 @@ def main():
     Br = 0.2  # roller damping, Nm
     Iw = 1    # wheel inertia
     Ir = 1    # roller inertia
-    Ib = 1    # body inertia
+    Ib = 0.0159*BotMass    # body inertia
+    alpha = 0.4
     TractionTorque = 1  # modeled value
     
-    ExternalTorque = ContactJacobian(R, rw, rr, BotMass, Br, Iw, Ir, Ib, TractionTorque)
+    ExternalTorque = ContactJacobian(R, rw, rr, BotMass, Br, Iw, Ir, Ib, alpha, TractionTorque)
     
     # Wait until self.theta is set by the callback.
     #rate = rospy.Rate(10)  # 10 Hz
