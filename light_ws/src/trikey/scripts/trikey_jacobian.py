@@ -65,9 +65,9 @@ class ContactJacobian():
         self.marker.pose.orientation.y = 0
         self.marker.pose.orientation.z = 0
         self.marker.pose.orientation.w = 1
-        self.marker.scale.x = 0.1
-        self.marker.scale.y = 0.1
-        self.marker.scale.z = 0.1
+        self.marker.scale.x = 0.05
+        self.marker.scale.y = 0.05
+        self.marker.scale.z = 0.05
         self.marker.color.a = 1.0
         self.marker.color.r = 0.0
         self.marker.color.g = 1.0
@@ -88,7 +88,12 @@ class ContactJacobian():
 
         # self.robot_vertices = [(2.4, 3.36),(-3.4175, 0),(2.4, -3.36)]
 
-        self.robot_vertices = [(0.221, -0.118),(0.000, 0.263),(-0.214, -0.115)]
+        #self.robot_vertices = [(0.221, -0.118),(0.000, 0.263),(-0.214, -0.115)]
+        self.robot_vertices = [
+            (-0.118, 0.221),
+            (0.263, 0.000),
+            (-0.115, -0.214)
+        ]
 
         #Jacobian matrix for frame conversion all angles in radians
         
@@ -205,6 +210,7 @@ class ContactJacobian():
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
 
         self.BrMatrix =  self.Br*np.tanh(self.alpha*self.roller_angular_velocity)
+        rospy.loginfo(f"BR: {self.BrMatrix}")
         self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheels)       
 
         #self.TNom = np.linalg.inv(transpose_wheel)*(self.M*self.acceleration+self.Br) + self.Ir*self.wheel_angular_acceleration #THIS LINE IS NOT NEEDED
