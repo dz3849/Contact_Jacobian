@@ -46,6 +46,8 @@ class ContactJacobian():
         rospy.Subscriber("/gazebo/model_states", ModelStates , callback = self.thetacallback) # absolute orientation of the wheel
         self.velocity = None
         self.omega = None
+
+        #change to IMU topic
         rospy.Subscriber("/gazebo/model_states", Twist, callback = self.vel_callback) # this is a vector
         rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
         rospy.Subscriber("/joint_states", JointState, callback = self.wheelcallback)
@@ -451,7 +453,7 @@ def main():
     Br = 0.2  # roller damping, Nm
     Iw = 1    # wheel inertia
     Ir = 1    # roller inertia
-    Ib = 0.0159*BotMass    # body inertia
+    Ib = (0.4355**2)/12*BotMass    # body inertia
     alpha = 0.4
     TractionTorque = 1  # modeled value
     
