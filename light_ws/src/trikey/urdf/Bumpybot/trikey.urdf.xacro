@@ -13,7 +13,7 @@
     <inertial>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
       <mass value="20"/>
-       <inertia ixx="1.13" ixy="0" ixz="0" iyy="1.13" iyz="0" izz="1.13"/> <!--0.5649801*m-->
+       <inertia ixx="1.13" ixy="0" ixz="0" iyy="1.13" iyz="0" izz="7.92977"/> <!--0.5649801*m-->
     </inertial>
     <!-- <visual name="">
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.5708"/>
@@ -465,6 +465,66 @@
       <topicName>ft_sensor_2_topic</topicName>
     </plugin>
 </gazebo>
+<!-- 1) Add the imu_link (small, lightweight link so it doesn't affect your dynamics much) -->
+<link name="imu_link">
+  <inertial>
+    <!-- Small mass/inertia so we don't significantly affect the robot -->
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="0.01"/>
+    <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+  </inertial>
+  <!-- Visual is optional; you can omit if you don't want to see the sensor -->
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <box size="0.03 0.03 0.03"/>
+    </geometry>
+    <material name="gray">
+      <color rgba="0.6 0.6 0.6 1.0"/>
+    </material>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <box size="0.03 0.03 0.03"/>
+    </geometry>
+  </collision>
+</link>
+
+<!-- 2) Attach imu_link to body_link with a fixed joint -->
+<joint name="imu_joint" type="fixed">
+  <!-- Adjust xyz/rpy so the IMU sits wherever you want on the robot body -->
+  <origin xyz="0.0 0.0 0.1" rpy="0 0 0"/>
+  <parent link="body_link"/>
+  <child link="imu_link"/>
+</joint>
+
+<!-- 3) Define the IMU sensor in a Gazebo block. 
+     Make sure to reference="imu_link" so that the sensor is attached to imu_link -->
+<gazebo reference="imu_link">
+  <sensor type="imu" name="my_robot_imu">
+    <update_rate>100</update_rate>
+    <always_on>true</always_on>
+    <visualize>false</visualize>
+    <!-- The default topic in Gazebo might be /my_robot_imu/data, but you can set it yourself -->
+    <topicName>imu/data</topicName>
+
+    <!-- 4) Optional: The gazebo_ros_imu_sensor plugin that publishes ROS topics -->
+    <plugin name="gazebo_ros_imu_sensor" filename="libgazebo_ros_imu_sensor.so">
+      <ros>
+        <!-- If you want the IMU data under /trikey/imu/data, or just /imu/data, etc. -->
+        <namespace>/trikey</namespace>
+        <!-- If you wish to rename or remap the default plugin topic to /imu/data: -->
+        <remapping>~/imu/data:=imu/data</remapping>
+      </ros>
+
+      <!-- Noise parameters, etc. -->
+      <gaussian_noise>0.005</gaussian_noise>        <!-- Example noise level -->
+      <update_rate>100</update_rate>
+    </plugin>
+  </sensor>
+</gazebo>
+
 
 <transmission name="trans_wheel0">
   <type>transmission_interface/SimpleTransmission</type>
