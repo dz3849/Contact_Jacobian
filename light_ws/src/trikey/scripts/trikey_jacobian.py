@@ -11,6 +11,7 @@ from tf.transformations import euler_from_quaternion
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float64
+from sensor_msgs.msg import Imu
 #Fix name space issue and i hopefully sdhould be good to go :(
 # and this error
 #[WARN] [1732923937.001813, 377.757000]: Controller Spawner couldn't find the expected controller_manager ROS interface.
@@ -48,6 +49,7 @@ class ContactJacobian():
         self.omega = None
 
         #change to IMU topic
+        rospy.Subscriber("/imu/data", Imu, self.acceleration_callback)
         rospy.Subscriber("/gazebo/model_states", Twist, callback = self.vel_callback) # this is a vector
         rospy.Subscriber("/torque_sensor_data", JointState, callback = self.torquecallback) #switch to subsribing to /trikey_light/joint_states
         rospy.Subscriber("/joint_states", JointState, callback = self.wheelcallback)
@@ -84,6 +86,8 @@ class ContactJacobian():
         self.Ts = None
         self.x = None
         self.y = None
+        self.x_ddot = None
+        self.y_ddot = None
         #self.robot_vertices =[(0.250216,-0.144463), (0, 0.288925), (-0.250216,-0.144463)]
         # self.robot_vertices = [(-0.250216,0.144463),(0,-0.288925),(0.250216,0.144463)]
 
@@ -136,23 +140,38 @@ class ContactJacobian():
        robot_pose = data.pose[robot_index].orientation
        self.x = robot_pose.x
        self.y = robot_pose.y
-       
-    def vel_callback(self, data):
-        try:
-            robot_index = data.name.index('trikey')
+    
+    def acceleration_callback(self, msg):
+        self.x_ddot = msg.linear_acceleration.x
+        self.y_ddot = msg.linear_acceleration.y
+        rospy.logwarn(f" xddot: {self.x_ddot}  yddot{self.y_ddot}")
+
+    def vel_callback(self,  data):
+        # Get yaw from orientation
+        # q = msg.orientation
+        # quat = [q.x, q.y, q.z, q.w]
+        # _, _, yaw = euler_from_quaternion(quat)
+        # self.theta = yaw
+
+
+        robot_index = data.name.index('trikey')
             
-            robot_twist = data.twist[robot_index]
+        robot_twist = data.twist[robot_index]
+        self.velocity = [[robot_twist.linear.x], [robot_twist.linear.y], [robot_twist.angular.z]]
+        self.wheel_angular_velocity = np.matmul(self.Jcw, self.velocity)
+        self.roller_angular_velocity = np.matmul(self.Jcr, self.velocity)
 
-            self.velocity = [[robot_twist.linear.x], [robot_twist.linear.y], [robot_twist.angular.z]]
-            self.wheel_angular_velocity = np.matmul(self.Jcw, self.velocity)
-            self.roller_angular_velocity = np.matmul(self.Jcr, self.velocity)
 
-            self.omega =robot_twist.angular.z
-            # rospy.loginfo(f"Robot velocity: {self.velocity}")
-        except ValueError:
-            rospy.logerr("Robot model 'trikey' not found in /gazebo/model_states")
-        except Exception as e:
-            rospy.logerr(f"Error in vel_callback: {str(e)}")
+        # theta_dot = robot_twist.angular.z
+        # # differentiate angular velocity (theta_dot) to get angular acceleration (theta_ddot)
+        # if self.theta_dot_now is None:
+        #     self.theta_dot_now = theta_dot
+        #     self.theta_dot_prev = self.theta_dot_now
+        #     return
+        # else:
+        #     self.theta_dot_prev = self.theta_dot_now
+        #     self.theta_dot_now = theta_dot
+
 
     def thetacallback(self, data):
         try:
@@ -212,8 +231,9 @@ class ContactJacobian():
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
 
         self.BrMatrix =  self.Br*np.tanh(self.alpha*self.roller_angular_velocity)
-        rospy.loginfo(f"BR: {self.BrMatrix}")
-        self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheels)       
+        rospy.logwarn(f"xddot: {self.x_ddot}  yddot: {self.y_ddot}")
+        #self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheels) 
+        self.acceleration = [[self.x_ddot], [self.y_ddot], [self.wheel_angular_acceleration]]      
 
         #self.TNom = np.linalg.inv(transpose_wheel)*(self.M*self.acceleration+self.Br) + self.Ir*self.wheel_angular_acceleration #THIS LINE IS NOT NEEDED
     
