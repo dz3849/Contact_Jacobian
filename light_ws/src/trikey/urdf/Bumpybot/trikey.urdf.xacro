@@ -501,29 +501,16 @@
 
 <!-- 3) Define the IMU sensor in a Gazebo block. 
      Make sure to reference="imu_link" so that the sensor is attached to imu_link -->
-<gazebo reference="imu_link">
-  <sensor type="imu" name="my_robot_imu">
-    <update_rate>100</update_rate>
-    <always_on>true</always_on>
-    <visualize>false</visualize>
-    <!-- The default topic in Gazebo might be /my_robot_imu/data, but you can set it yourself -->
-    <topicName>imu/data</topicName>
-
-    <!-- 4) Optional: The gazebo_ros_imu_sensor plugin that publishes ROS topics -->
-    <plugin name="gazebo_ros_imu_sensor" filename="libgazebo_ros_imu_sensor.so">
-      <ros>
-        <!-- If you want the IMU data under /trikey/imu/data, or just /imu/data, etc. -->
-        <namespace>/trikey</namespace>
-        <!-- If you wish to rename or remap the default plugin topic to /imu/data: -->
-        <remapping>~/imu/data:=imu/data</remapping>
-      </ros>
-
-      <!-- Noise parameters, etc. -->
-      <gaussian_noise>0.005</gaussian_noise>        <!-- Example noise level -->
-      <update_rate>100</update_rate>
+ <gazebo>
+    <plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
+      <alwaysOn>true</alwaysOn>
+      <bodyName>imu_link</bodyName>
+      <topicName>imu/data</topicName>
+      <serviceName>imu_service</serviceName>
+      <gaussianNoise>0.0</gaussianNoise>
+      <updateRate>20.0</updateRate>
     </plugin>
-  </sensor>
-</gazebo>
+  </gazebo>
 
 
 <transmission name="trans_wheel0">
