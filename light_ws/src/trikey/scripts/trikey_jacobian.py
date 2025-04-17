@@ -41,6 +41,9 @@ class ContactJacobian():
         self.angular_vel_wheels_now = None
         self.angular_vel_wheels_prev = None
         self.roller_vel = None
+        self.theta_dot_now = None
+        self.theta_dot_prev = None
+        self.theta_dot = None
 
         self.sub_body = rospy.Subscriber("/gazebo/model_states", ModelStates, callback = self.position_callback) 
         self.theta = None
@@ -125,7 +128,6 @@ class ContactJacobian():
         if self.t_now is None or self.t is None:
             rospy.logwarn("t_now or t is none. Possible timing issue.")
             return
-        rospy.logwarn(self.t)
 
         # Make sure required variables (like self.theta) are set before updating.
         if self.theta is None:
@@ -133,7 +135,8 @@ class ContactJacobian():
             return
 
         output_nominal = self.external_forces()
-        self.visualize(output_nominal)
+        if np.abs(self.Fextx) > 40  or np.abs(self.Fexty) > 40 :
+            self.visualize(output_nominal)
 
     def position_callback(self, data):
        robot_index = data.name.index('trikey')
@@ -144,7 +147,7 @@ class ContactJacobian():
     def acceleration_callback(self, msg):
         self.x_ddot = msg.linear_acceleration.x
         self.y_ddot = msg.linear_acceleration.y
-        rospy.logwarn(f" xddot: {self.x_ddot}  yddot{self.y_ddot}")
+        #rospy.logwarn(f" xddot: {self.x_ddot}  yddot{self.y_ddot}")
 
     def vel_callback(self,  data):
         # Get yaw from orientation
@@ -161,16 +164,17 @@ class ContactJacobian():
         self.wheel_angular_velocity = np.matmul(self.Jcw, self.velocity)
         self.roller_angular_velocity = np.matmul(self.Jcr, self.velocity)
 
+        
 
-        # theta_dot = robot_twist.angular.z
-        # # differentiate angular velocity (theta_dot) to get angular acceleration (theta_ddot)
-        # if self.theta_dot_now is None:
-        #     self.theta_dot_now = theta_dot
-        #     self.theta_dot_prev = self.theta_dot_now
-        #     return
-        # else:
-        #     self.theta_dot_prev = self.theta_dot_now
-        #     self.theta_dot_now = theta_dot
+        self.theta_dot = robot_twist.angular.z
+        # differentiate angular velocity (theta_dot) to get angular acceleration (theta_ddot)
+        if self.theta_dot_now is None:
+            self.theta_dot_now = self.theta_dot
+            self.theta_dot_prev = self.theta_dot_now
+            return
+        else:
+            self.theta_dot_prev = self.theta_dot_now
+            self.theta_dot_now = self.theta_dot
 
 
     def thetacallback(self, data):
@@ -231,10 +235,9 @@ class ContactJacobian():
         # self.acceleration = np.linalg.inv(self.Jcw)*self.wheel_angular_acceleration + np.linalg.pinv(self.Jcwdot)*self.scalar_wheel_qdot
 
         self.BrMatrix =  self.Br*np.tanh(self.alpha*self.roller_angular_velocity)
-        rospy.logwarn(f"xddot: {self.x_ddot}  yddot: {self.y_ddot}")
         #self.acceleration = np.matmul(self.Jcwinv, self.wheel_angular_acceleration) + np.matmul(self.Jcwdot_inv, self.angular_vel_wheels) 
-        self.acceleration = [[self.x_ddot], [self.y_ddot], [self.wheel_angular_acceleration]]      
-
+        #self.acceleration = [[self.x_ddot], [self.y_ddot], [self.theta_dot]]    
+        self.acceleration = [[self.x_ddot], [self.y_ddot], [0]]     
         #self.TNom = np.linalg.inv(transpose_wheel)*(self.M*self.acceleration+self.Br) + self.Ir*self.wheel_angular_acceleration #THIS LINE IS NOT NEEDED
     
     def torque_no_fext(self):
@@ -255,7 +258,8 @@ class ContactJacobian():
         tf_Fext = self.vector_transform(Fext)
         #self.find_robot_vertices(self.theta)
         intersection = self.force_line_intersection(self.robot_vertices, tf_Fext)
-        rospy.loginfo(f"Stats:{intersection[0]} {intersection[0]} {self.Fextx} {self.Fexty}")
+        if np.abs(self.Fextx) > 40  or np.abs(self.Fexty) > 40 :
+            rospy.loginfo(f"Stats:{intersection[0]} {intersection[0]} {self.Fextx} {self.Fexty}")
     
         return [intersection[0], intersection[1], self.Fextx, self.Fexty] #Final Output
     
@@ -330,22 +334,22 @@ class ContactJacobian():
 
         elif Fext[0] != 0:
             if edge_flag[0] == True and edge_flag[1] == True:
-                if Fext[1] > 0:
-                    contact_point = intersections[0]
-                else:
+                if Fext[0] > 0:
                     contact_point = intersections[1]
+                else:
+                    contact_point = intersections[0]
 
             if edge_flag[0] == True and edge_flag[2] ==True:
+                if Fext[1] > 0:
+                    contact_point = intersections[1]
+                else:
+                    contact_point = intersections[0]
+
+            if edge_flag[1] == True and edge_flag[2] ==True:
                 if Fext[0] > 0:
                     contact_point = intersections[0]
                 else:
                     contact_point = intersections[1]
-
-            if edge_flag[1] == True and edge_flag[2] ==True:
-                if Fext[1] > 0:
-                    contact_point = intersections[1]
-                else:
-                    contact_point = intersections[0]
         #     else: #this is when m = 0, a horizontal line, probably dont need this no more
         #         if Fext[0] > 0:
         #             contact_point = intersections[0]
@@ -473,7 +477,7 @@ def main():
     Br = 0.2  # roller damping, Nm
     Iw = 1    # wheel inertia
     Ir = 1    # roller inertia
-    Ib = (0.4355**2)/12*BotMass    # body inertia
+    Ib = (0.4366**2)/12*BotMass    # body inertia
     alpha = 0.4
     TractionTorque = 1  # modeled value
     

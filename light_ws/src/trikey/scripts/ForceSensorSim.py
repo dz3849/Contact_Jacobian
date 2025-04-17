@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # Subscribe to the three sensor topics.
     rospy.Subscriber("/ft_sensor_1_topic", WrenchStamped, callback_sensor_1)
     rospy.Subscriber("/ft_sensor_2_topic", WrenchStamped, callback_sensor_2)
-    rospy.Subscriber("/ft_sensor_3_topic", WrenchStamped, callback_sensor_3)
+    rospy.Subscriber("/ft_sensor_0_topic", WrenchStamped, callback_sensor_3)
 
     # Create a Timer that calls timer_callback at 100 Hz.
     # This ensures that each published message uses a single, tightly synchronized timestamp.
