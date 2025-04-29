@@ -335,7 +335,9 @@ class ContactJacobian():
         elif Fext[0] != 0:
             if edge_flag[0] == True and edge_flag[1] == True:
                 if Fext[0] > 0:
-                    contact_point = intersections[1]
+                    #contact_point = intersections[1]
+                    contact_point = self.circular_parametrization(np.array((0,0)), np.array(Fext), np.array(intersections[0]))
+
                 else:
                     contact_point = intersections[0]
 
@@ -347,7 +349,8 @@ class ContactJacobian():
 
             if edge_flag[1] == True and edge_flag[2] ==True:
                 if Fext[0] > 0:
-                    contact_point = intersections[0]
+                    # contact_point = intersections[0]
+                    contact_point = self.circular_parametrization(np.array((0,0)), np.array(Fext), np.array(intersections[0]))
                 else:
                     contact_point = intersections[1]
         #     else: #this is when m = 0, a horizontal line, probably dont need this no more
@@ -366,7 +369,22 @@ class ContactJacobian():
  
         return contact_point
 
+    def circular_parametrization(self, centroid, Fext, edge_point):
+        R = 668.86666
+        # Quadratic coefficients
+        A = np.dot(Fext, Fext)
+        B = 2 * np.dot(Fext, edge_point - centroid)
+        Cq= np.dot(edge_point - centroid, edge_point - centroid) - R**2
 
+        # choose the root that makes s>0
+        disc = B*B - 4*A*Cq
+        s1 = (-B + np.sqrt(disc)) / (2*A)
+        s2 = (-B - np.sqrt(disc)) / (2*A)
+        s_star = s1 if s1>0 else s2
+
+        contact_point = edge_point + s_star*edge_point
+
+        return contact_point
     def global_point_transform(self, cp):
         """ 
         Take the contact point from the local perspective and transform it to the global frame of the robot
