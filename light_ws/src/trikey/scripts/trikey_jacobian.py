@@ -370,10 +370,10 @@ class ContactJacobian():
         return contact_point
 
     def circular_parametrization(self, centroid, Fext, edge_point):
-        R = 668.86666
+        R = 0.66886666
         # Quadratic coefficients
         A = np.dot(Fext, Fext)
-        B = 2 * np.dot(Fext, edge_point - centroid)
+        B = 2 * np.dot(-Fext, edge_point - centroid)
         Cq= np.dot(edge_point - centroid, edge_point - centroid) - R**2
 
         # choose the root that makes s>0
@@ -495,7 +495,8 @@ def main():
     Br = 0.2  # roller damping, Nm
     Iw = 1    # wheel inertia
     Ir = 1    # roller inertia
-    Ib = (0.4366**2)/12*BotMass    # body inertia
+    #Ib = (0.4366**2)/12*BotMass    # body inertia
+    Ib  =8.49273000
     alpha = 0.4
     TractionTorque = 1  # modeled value
     
